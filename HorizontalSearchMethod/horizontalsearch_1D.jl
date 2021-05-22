@@ -128,18 +128,18 @@ function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, ma
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
     s = Search(sol, _f, _ℓ, _γ, _η)
     x_prev = s[1]
-    _ℓ = s[2]
+    #_ℓ = s[2]
 
     while abs(norm(_x) - norm(x_prev)) > _η
 
         s = Search(sol, _f, _ℓ, _γ, _η)
         x_prev = s[1]
-        _ℓ = s[2]
+        #_ℓ = s[2]
 
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
         s = Search(sol, _f, _ℓ, _γ, _η)
         _x = s[1]
-        _ℓ = s[2]
+        #_ℓ = s[2]
     end
 
     sol = Newton(_f, _x, _ϵ)
@@ -151,7 +151,8 @@ end
 
 #f(x) = x^2 + sin(3x^2)
 #f(x) = x^4 + 3x^3 + x^2 + x + sin(3x^4)
-f(x) = x^4 - x^3 - 50x^2 + 100*sin(30x)
+#f(x) = x^4 - x^3 - 50x^2 + 100*sin(30x)
+f(x) = x^2/20 + 10sin(x) + 5sin(5x)
 
 x0 = -6.0
 ϵ = 1e-8
