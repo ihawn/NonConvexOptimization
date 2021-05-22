@@ -152,16 +152,17 @@ end
 #f(x) = x^2 + sin(3x^2)
 #f(x) = x^4 + 3x^3 + x^2 + x + sin(3x^4)
 #f(x) = x^4 - x^3 - 50x^2 + 100*sin(30x)
-f(x) = x^2/20 + 10sin(x) + 5sin(5x)
+#f(x) = x^2/20 + 10sin(x) + 5sin(5x)
+f(x) = x^4/20000 - x^3/1000 - x^2/10 + 10sin(x) + 5sin(5x)
 
-x0 = -6.0
+x0 = -50.0
 ϵ = 1e-8
 η = 1e-2
 α = 0.5
 β = 0.8
 κ = 0.01
-ℓ = 15
-γ = 0.8
+ℓ = 35
+γ = 0.99
 searchWidth = 10
 xPlot = []
 yPlot = []
@@ -179,8 +180,8 @@ maxIterations = 150
 
 
 minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
-xlist = range(-7.0, 8.0, length = 1000)
-plot( xlist, f.(xlist), legend = false)
+xlist = range(-50.0, 65.0, length = 1000)
+plot( xlist, f.(xlist), #=xrange = (25,50), yrange = (-115,-40),=# legend = false)
 scatter!(xPlot, yPlot, markersize = 2)
 scatter!(xSol, ySol)
 plot!(xSearchRight, ySearchRight)
