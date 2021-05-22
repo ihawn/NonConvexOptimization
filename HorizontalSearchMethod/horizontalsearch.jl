@@ -89,7 +89,6 @@ end
 function Search(local_sol, _f, _ℓ, _γ, _η)
     while _f(local_sol[1] + _ℓ) >= local_sol[2] + _η && _f(local_sol[1] - _ℓ) >= local_sol[2] + _η && _ℓ > _η
         _ℓ *= _γ
-        print("\nl = ", ℓ)
     end
 
     if _f(local_sol[1] + _ℓ) < local_sol[2] + _η
@@ -102,12 +101,14 @@ end
 
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
-
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    _x = Search(sol, _f, _ℓ, _γ, _η)
+    x_prev = Search(sol, _f, _ℓ, _γ, _η)
 
-    sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-
+    while abs(norm(_x) - norm(x_prev)) > _η
+        x_prev = Search(sol, _f, _ℓ, _γ, _η)
+        sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
+        _x = Search(sol, _f, _ℓ, _γ, _η)
+    end
 
     return sol
 end
@@ -116,7 +117,7 @@ end
 
 f(x) = x^2 + sin(3x^2)
 
-x0 =  5.0
+x0 =  6.0
 ϵ = 1e-8
 η = 1e-1
 α = 0.5
@@ -129,6 +130,8 @@ xPlot = []
 yPlot = []
 xSol = []
 ySol = []
+xSearch = []
+ySearch = []
 xSolFinal = []
 ySolFinal = []
 
@@ -137,7 +140,8 @@ maxIterations = 150
 
 
 minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
-xlist = range(-3, 5, length = 1000)
+xlist = range(-7, 7, length = 1000)
 plot( xlist, f.(xlist), legend = false)
+scatter!(xPlot, yPlot, markersize = 2)
 scatter!(xSol, ySol)
 #scatter!(xSolFinal, ySolFinal, color = "Red")
