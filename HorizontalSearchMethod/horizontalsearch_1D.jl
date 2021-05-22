@@ -33,20 +33,25 @@ function Newton(_f, _x, _ϵ)
 
     end
 
+    push!(xSolFinal, _x)
+    push!(ySolFinal, _f(_x))
+
     return _x, _f(_x)
 end
 
-function Newton_Root(_f, _x, _ϵ, b)
-    fx = _f(_x) - b
+function Newton_Root(_f, _x, _ϵ)
+    fx = _f(_x)
     ∇f = Compute_Gradient(_f, _x)
 
     while abs(fx) > _ϵ
         _x -= fx / ∇f
         ∇f = Compute_Gradient(_f, _x)
-        fx = _f(_x) - b
+        fx = _f(_x)
     end
 
-    return _x, _f(_x) - b
+
+
+    return _x, _f(_x)
 end
 
 function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
@@ -87,14 +92,33 @@ end
 
 
 function Search(local_sol, _f, _ℓ, _γ, _η)
+
+    push!(xSearchRight, local_sol[1])
+    push!(ySearchRight, local_sol[2])
+    push!(xSearchLeft, local_sol[1])
+    push!(ySearchLeft, local_sol[2])
+
+    push!(xSearchRight, local_sol[1] + _ℓ)
+    push!(ySearchRight, local_sol[2])
+    push!(xSearchLeft, local_sol[1] - _ℓ)
+    push!(ySearchLeft, local_sol[2])
+
     while _f(local_sol[1] + _ℓ) >= local_sol[2] + _η && _f(local_sol[1] - _ℓ) >= local_sol[2] + _η && _ℓ > _η
         _ℓ *= _γ
+        push!(xSearchRight, local_sol[1] + _ℓ)
+        push!(ySearchRight, local_sol[2])
+        push!(xSearchLeft, local_sol[1] - _ℓ)
+        push!(ySearchLeft, local_sol[2])
     end
 
     if _f(local_sol[1] + _ℓ) < local_sol[2] + _η
-        return local_sol[1] + _ℓ
+        push!(xSearchRight, local_sol[1] + _ℓ)
+        push!(ySearchRight, _f(local_sol[1] + _ℓ))
+        return local_sol[1] + _ℓ, _ℓ
     else
-        return local_sol[1] - _ℓ
+        push!(xSearchLeft, local_sol[1] - _ℓ)
+        push!(ySearchLeft, _f(local_sol[1] - _ℓ))
+        return local_sol[1] - _ℓ, _ℓ
     end
 end
 
@@ -102,13 +126,23 @@ end
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    x_prev = Search(sol, _f, _ℓ, _γ, _η)
+    s = Search(sol, _f, _ℓ, _γ, _η)
+    x_prev = s[1]
+    _ℓ = s[2]
 
     while abs(norm(_x) - norm(x_prev)) > _η
-        x_prev = Search(sol, _f, _ℓ, _γ, _η)
+
+        s = Search(sol, _f, _ℓ, _γ, _η)
+        x_prev = s[1]
+        _ℓ = s[2]
+
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
-        _x = Search(sol, _f, _ℓ, _γ, _η)
+        s = Search(sol, _f, _ℓ, _γ, _η)
+        _x = s[1]
+        _ℓ = s[2]
     end
+
+    sol = Newton(_f, _x, _ϵ)
 
     return sol
 end
@@ -117,21 +151,23 @@ end
 
 f(x) = x^2 + sin(3x^2)
 
-x0 =  6.0
+x0 = 7.0
 ϵ = 1e-8
 η = 1e-1
 α = 0.5
 β = 0.8
-κ = 0.02
-ℓ = 10
-γ = 0.8
+κ = 0.01
+ℓ = 2
+γ = 0.5
 searchWidth = 10
 xPlot = []
 yPlot = []
 xSol = []
 ySol = []
-xSearch = []
-ySearch = []
+xSearchLeft = []
+ySearchLeft = []
+xSearchRight = []
+ySearchRight = []
 xSolFinal = []
 ySolFinal = []
 
@@ -144,4 +180,6 @@ xlist = range(-7, 7, length = 1000)
 plot( xlist, f.(xlist), legend = false)
 scatter!(xPlot, yPlot, markersize = 2)
 scatter!(xSol, ySol)
-#scatter!(xSolFinal, ySolFinal, color = "Red")
+plot!(xSearchRight, ySearchRight)
+plot!(xSearchLeft, ySearchLeft)
+scatter!(xSolFinal, ySolFinal, color = "Red")
