@@ -88,6 +88,7 @@ end
 
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, width, maxIt)
 
+
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
     _x = Newton_Root(_f, sol[1] - width, _η, sol[2])[1]
 
@@ -100,7 +101,6 @@ end
 
 
 f(x) = x^4 + 3x^3 + x^2 + x + sin(3x^4)
-neg_f(x) = -x^4 - 3x^3 - x^2 - x - sin(3x^4)
 
 x0 =  5.0
 ϵ = 1e-8
