@@ -78,21 +78,32 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
         push!(yPlot, _x[2])
     end
 
+    push!(solPlotX, _x[1])
+    push!(solPlotY, _x[2])
+
     return _x, val
 end
 
 
-function Adj_F(_f, _x, b)
-    return _f(_x) - b
+function Generate_ℓ_Vector(_x, n, _ℓ)
+    vec = zeros(length(_x))
+    vec[n] = _ℓ
+    return  vec
 end
 
 
 function Search(local_sol, _f, _ℓ, _γ, _η)
 
+    ℓ_start = _ℓ
 
-    while _f(local_sol[1] + _ℓ) >= local_sol[2] + _η && _f(local_sol[1] - _ℓ) >= local_sol[2] + _η && _ℓ > _η
-        _ℓ *= _γ
+    for i = 1:length(local_sol[1])
+        vec = Generate_ℓ_Vector(_x, i, _ℓ)
+        while _f(local_sol[1][i] + vec) >= local_sol[2] + _η && _f(local_sol[1][i] + vec) >= local_sol[2] + _η && _ℓ > _η
+            _ℓ *= _γ
+        end
     end
+
+
 
     if _f(local_sol[1] + _ℓ) < local_sol[2] + _η
         return local_sol[1] + _ℓ, _ℓ
@@ -105,7 +116,7 @@ end
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    #s = Search(sol, _f, _ℓ, _γ, _η)
+#    s = Search(sol, _f, _ℓ, _γ, _η)
     #x_prev = s[1]
     #_ℓ = s[2]
 
@@ -140,7 +151,8 @@ searchWidth = 10
 
 xPlot = []
 yPlot = []
-solPlot = []
+solPlotX = []
+solPlotY = []
 
 var = x0
 maxIterations = 150
@@ -157,5 +169,6 @@ Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
 plot(p1, legend = false)
-plot!(xPlot, yPlot)
-scatter!(xPlot, yPlot)
+plot!(xPlot, yPlot, color = "white")
+scatter!(xPlot, yPlot, markersize = 2, color = "red")
+scatter!(solPlotX, solPlotY, color = "green")
