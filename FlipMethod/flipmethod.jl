@@ -93,6 +93,8 @@ function Flip_Method(_f, _x, _α, _β, _η, _ϵ, _κ, maxIt, minVal, maxVal)
     i = 0
 
     while keepGoing && i < maxIt
+
+
         _x = sol[1] + 2*_η*Normal_Sign(sol[1] - x_start)
         x_start = sol[1]
         sol = Grad_Descent(_f, _f, _x, _α, _β, _η, _κ)

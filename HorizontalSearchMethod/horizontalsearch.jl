@@ -86,11 +86,25 @@ function Adj_F(_f, _x, b)
 end
 
 
-function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, width, maxIt)
+function Search(local_sol, _f, _ℓ, _γ, _η)
+    while _f(local_sol[1] + _ℓ) >= local_sol[2] + _η && _f(local_sol[1] - _ℓ) >= local_sol[2] + _η && _ℓ > _η
+        _ℓ *= _γ
+        print("\nl = ", ℓ)
+    end
+
+    if _f(local_sol[1] + _ℓ) < local_sol[2] + _η
+        return local_sol[1] + _ℓ
+    else
+        return local_sol[1] - _ℓ
+    end
+end
+
+
+function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    _x = Newton_Root(_f, sol[1] - width, _η, sol[2])[1]
+    _x = Search(sol, _f, _ℓ, _γ, _η)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
 
@@ -100,7 +114,7 @@ end
 
 
 
-f(x) = x^4 + 3x^3 + x^2 + x + sin(3x^4)
+f(x) = x^2 + sin(3x^2)
 
 x0 =  5.0
 ϵ = 1e-8
@@ -108,6 +122,8 @@ x0 =  5.0
 α = 0.5
 β = 0.8
 κ = 0.02
+ℓ = 10
+γ = 0.8
 searchWidth = 10
 xPlot = []
 yPlot = []
@@ -120,9 +136,8 @@ var = x0
 maxIterations = 150
 
 
-minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, searchWidth, maxIterations)
-plot(f, legend = false, ylims = (-8, 1), xlims = (-3,0))
-plot!(xPlot, yPlot)
-scatter!(xPlot, yPlot, markersize = 2)
-#scatter!(xSol, ySol)
+minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
+xlist = range(-3, 5, length = 1000)
+plot( xlist, f.(xlist), legend = false)
+scatter!(xSol, ySol)
 #scatter!(xSolFinal, ySolFinal, color = "Red")
