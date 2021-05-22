@@ -149,11 +149,13 @@ end
 
 
 
-f(x) = x^2 + sin(3x^2)
+#f(x) = x^2 + sin(3x^2)
+#f(x) = x^4 + 3x^3 + x^2 + x + sin(3x^4)
+f(x) = x^4 - x^3 - 50x^2 + 100*sin(30x)
 
-x0 = 7.0
+x0 = -6.0
 ϵ = 1e-8
-η = 1e-1
+η = 1e-2
 α = 0.5
 β = 0.8
 κ = 0.01
@@ -176,7 +178,7 @@ maxIterations = 150
 
 
 minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
-xlist = range(-7, 7, length = 1000)
+xlist = range(-7.0, 8.0, length = 1000)
 plot( xlist, f.(xlist), legend = false)
 scatter!(xPlot, yPlot, markersize = 2)
 scatter!(xSol, ySol)
