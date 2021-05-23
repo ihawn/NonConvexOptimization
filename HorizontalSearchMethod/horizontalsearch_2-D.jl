@@ -23,6 +23,40 @@ function Back_Line_Search(_x, _f, _fx, _∇f, _Δx, _α, _β, _κ)
 end
 
 
+function Newton_Step(_∇f, _∇2f, _x)
+    return _∇2f\-_∇f
+end
+
+
+function Newton_Decrement(_∇2f, _Δxnt)
+    return transpose(_Δxnt)*_∇2f*_Δxnt
+end
+
+
+function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
+
+    λ2 = 1
+    it = 0
+    val = _f(_x)
+
+    while λ2 > _ϵ && it <= maxIt
+        val = _f(_x)
+        ∇f = Compute_Gradient(_f, _x)
+        ∇2f = Compute_Hessian(_f, _x)
+        Δxnt = Newton_Step(∇f, ∇2f, _x)
+        λ2 = Newton_Decrement(∇2f, Δxnt)
+        t = Back_Line_Search(_x, _f, val, ∇f, Δxnt, _α, _β, _κ)
+        _x += t*Δxnt
+        it+=1
+    end
+
+    push!(finalSolX, _x[1])
+    push!(finalSolY, _x[2])
+
+    return _x, val
+end
+
+
 function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
     it = 0;
     t = 1
@@ -60,7 +94,6 @@ function Generate_ℓ_Vector(_x, _ℓ, _k, _ρ)
     vec[1] = _ℓ*sin(pi*_k/_ρ)
     vec[2] = _ℓ*cos(pi*_k/_ρ)
 
-    #vec[n] = _ℓ
     return  vec
 end
 
@@ -68,20 +101,6 @@ end
 function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
 
     ℓ_start = _ℓ
-
-    #
-    # vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
-    # push!(searchX, (local_sol[1] + vec)[1])
-    # push!(searchY, (local_sol[1] + vec)[2])
-    # push!(searchX, (local_sol[1] - vec)[1])
-    # push!(searchY, (local_sol[1] - vec)[2])
-    #
-    # vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
-    # push!(searchX, (local_sol[1] + vec)[1])
-    # push!(searchY, (local_sol[1] + vec)[2])
-    # push!(searchX, (local_sol[1] - vec)[1])
-    # push!(searchY, (local_sol[1] - vec)[2])
-
 
     for k in 1:_ρ
 
@@ -117,36 +136,35 @@ function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, widt
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
     s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
     x_prev = s[1]
-    #_ℓ = s[2]
 
     while abs(norm(_x) - norm(x_prev)) > _η
 
         s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
         x_prev = s[1]
-        #_ℓ = s[2]
 
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
         s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
         _x = s[1]
-        #_ℓ = s[2]
     end
 
-#    sol = Newton(_f, _x, _ϵ)
+    sol = Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
+
+    println(sol)
 
     return sol
 end
 
 flush(stdout)
 
-x0 = [-5,5]
+x0 = [10,10]
 ϵ = 1e-8
-η = 1e-2
+η = 1e-1
 α = 0.5
 β = 0.8
-κ = 0.5
+κ = 0.1
 ℓ = 5
 γ = 0.8
-ρ = 15
+ρ = 6
 searchWidth = 10
 
 xPlot = []
@@ -155,23 +173,27 @@ solPlotX = []
 solPlotY = []
 searchX = []
 searchY = []
+finalSolX = []
+finalSolY = []
 
 var = x0
 maxIterations = 150
 
 f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10sin(5x[1])
 
-minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
+
+@time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -5.0:0.03:5.0
-_y = -5.0:0.03:5.0
+_x = -10.0:0.03:10.0
+_y = -10.0:0.03:10.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false)
-scatter!(searchX, searchY, markersize = 2.5)
+plot(p1, legend = false, title = "Global Minimization With Horizontal Search")
+#scatter!(searchX, searchY, markersize = 2.5)
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
 scatter!(solPlotX, solPlotY, color = "green")
+scatter!(finalSolX, finalSolY, color = "white")
