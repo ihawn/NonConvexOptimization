@@ -54,41 +54,44 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
 end
 
 
-function Generate_ℓ_Vector(_x, n, _ℓ)
+function Generate_ℓ_Vector(_x, _ℓ, _k, _ρ)
 
     vec = zeros(length(_x))
-    vec[n] = _ℓ
+    vec[1] = _ℓ*sin(pi*_k/_ρ)
+    vec[2] = _ℓ*cos(pi*_k/_ρ)
+
+    #vec[n] = _ℓ
     return  vec
 end
 
 
-function Search(local_sol, _f, _ℓ, _γ, _η)
+function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
 
     ℓ_start = _ℓ
-    len = length(local_sol)
+
+    #
+    # vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
+    # push!(searchX, (local_sol[1] + vec)[1])
+    # push!(searchY, (local_sol[1] + vec)[2])
+    # push!(searchX, (local_sol[1] - vec)[1])
+    # push!(searchY, (local_sol[1] - vec)[2])
+    #
+    # vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
+    # push!(searchX, (local_sol[1] + vec)[1])
+    # push!(searchY, (local_sol[1] + vec)[2])
+    # push!(searchX, (local_sol[1] - vec)[1])
+    # push!(searchY, (local_sol[1] - vec)[2])
 
 
-    vec = Generate_ℓ_Vector(local_sol[1], 1, _ℓ)
-    push!(searchX, (local_sol[1] + vec)[1])
-    push!(searchY, (local_sol[1] + vec)[2])
-    push!(searchX, (local_sol[1] - vec)[1])
-    push!(searchY, (local_sol[1] - vec)[2])
+    for k in 1:_ρ
 
-    vec = Generate_ℓ_Vector(local_sol[1], 2, _ℓ)
-    push!(searchX, (local_sol[1] + vec)[1])
-    push!(searchY, (local_sol[1] + vec)[2])
-    push!(searchX, (local_sol[1] - vec)[1])
-    push!(searchY, (local_sol[1] - vec)[2])
-
-
-    for k in 1:len
 
         _ℓ = ℓ_start
-        vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
+        vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
 
         while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] - vec) >= local_sol[2] + _η && _ℓ > _η
             _ℓ *= _γ
-            vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
+            vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
 
 
             push!(searchX, (local_sol[1] + vec)[1])
@@ -98,32 +101,34 @@ function Search(local_sol, _f, _ℓ, _γ, _η)
         end
 
 
-        if _f(local_sol[1] + vec) < local_sol[2] + _η
+        if _f(local_sol[1] + vec) < local_sol[2] - _η
             return local_sol[1] + vec, _ℓ
-        elseif _f(local_sol[1] - vec) < local_sol[2] + _η
+        elseif _f(local_sol[1] - vec) < local_sol[2] - _η
             return local_sol[1] - vec, _ℓ
         end
     end
+
+    return local_sol[1], _ℓ
 end
 
 
-function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
+function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    s = Search(sol, _f, _ℓ, _γ, _η)
+    s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
     x_prev = s[1]
     #_ℓ = s[2]
 
     while abs(norm(_x) - norm(x_prev)) > _η
 
-        s = Search(sol, _f, _ℓ, _γ, _η)
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
         x_prev = s[1]
-        _ℓ = s[2]
+        #_ℓ = s[2]
 
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
-        s = Search(sol, _f, _ℓ, _γ, _η)
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
         _x = s[1]
-        _ℓ = s[2]
+        #_ℓ = s[2]
     end
 
 #    sol = Newton(_f, _x, _ϵ)
@@ -131,17 +136,17 @@ function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, ma
     return sol
 end
 
+flush(stdout)
 
-
-x0 = [4,0]
+x0 = [-5,5]
 ϵ = 1e-8
 η = 1e-2
 α = 0.5
 β = 0.8
 κ = 0.5
-ℓ = 2.5
+ℓ = 5
 γ = 0.8
-k = 1
+ρ = 15
 searchWidth = 10
 
 xPlot = []
@@ -156,7 +161,7 @@ maxIterations = 150
 
 f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10sin(5x[1])
 
-minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
+minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
 _x = -5.0:0.03:5.0
