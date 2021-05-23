@@ -95,18 +95,32 @@ end
 function Search(local_sol, _f, _ℓ, _γ, _η)
 
     ℓ_start = _ℓ
-    vec = Generate_ℓ_Vector(local_sol[1], 1, _ℓ)
 
+    vec = Generate_ℓ_Vector(local_sol[1], 1, _ℓ)
     push!(searchX, (local_sol[1] + vec)[1])
     push!(searchY, (local_sol[1] + vec)[2])
     push!(searchX, (local_sol[1] - vec)[1])
     push!(searchY, (local_sol[1] - vec)[2])
 
-    for i = 1:length(local_sol[1])
-        vec = Generate_ℓ_Vector(local_sol[1], i, _ℓ)
-        while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] + vec) >= local_sol[2] + _η && _ℓ > _η
+    vec = Generate_ℓ_Vector(local_sol[1], 2, _ℓ)
+    push!(searchX, (local_sol[1] + vec)[1])
+    push!(searchY, (local_sol[1] + vec)[2])
+    push!(searchX, (local_sol[1] - vec)[1])
+    push!(searchY, (local_sol[1] - vec)[2])
+
+    flush(stdout)
+    println("\n\n")
+
+    for k in 1:length(local_sol[1])
+
+        _ℓ = ℓ_start
+        vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
+
+        while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] - vec) >= local_sol[2] + _η && _ℓ > _η
             _ℓ *= _γ
-            vec = Generate_ℓ_Vector(local_sol[1], i, _ℓ)
+            vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
+
+            println(k)
 
             push!(searchX, (local_sol[1] + vec)[1])
             push!(searchY, (local_sol[1] + vec)[2])
@@ -158,8 +172,9 @@ x0 = [2,3]
 α = 0.5
 β = 0.8
 κ = 0.5
-ℓ = 1
+ℓ = 2
 γ = 0.5
+k = 1
 searchWidth = 10
 
 xPlot = []
@@ -184,7 +199,7 @@ Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
 plot(p1, legend = false)
+scatter!(searchX, searchY, markersize = 3)
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
 scatter!(solPlotX, solPlotY, color = "green")
-scatter!(searchX, searchY)
