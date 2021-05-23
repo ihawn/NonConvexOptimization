@@ -60,12 +60,21 @@ function Generate_ℓ_Vector(_x, n, _ℓ)
     return  vec
 end
 
+function Min_Location(a,b,c,d)
+    if c < d
+        return a
+    else
+        return b
+    end
+end
+
 
 function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
 
     ℓ_start = _ℓ
     len = length(local_sol)
     low = local_sol[2]
+
 
     vec = Generate_ℓ_Vector(local_sol[1], 1, _ℓ)
     push!(searchX, (local_sol[1] + vec)[1])
@@ -84,9 +93,9 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
 
         _ℓ = ℓ_start
         vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
-        low = min(Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2], Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2])
+        prev_low = min(Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2], Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2])
 
-        while low >= local_sol[2] + _η && _ℓ > _η
+        while low >= prev_low + _η && _ℓ > _η
             _ℓ *= _γ
             vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
             low = min(Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2], Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2])
@@ -97,6 +106,8 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
             push!(searchX, (local_sol[1] - vec)[1])
             push!(searchY, (local_sol[1] - vec)[2])
         end
+
+        prev_low = low
     end
 
 
@@ -140,14 +151,14 @@ end
 
 
 
-x0 = [4,0]
+x0 = [-4,4]
 ϵ = 1e-8
 η = 1e-2
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 3
-γ = 0.5
+ℓ = 2.5
+γ = 0.9
 
 searchWidth = 10
 
