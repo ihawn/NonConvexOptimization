@@ -86,8 +86,14 @@ end
 
 
 function Generate_ℓ_Vector(_x, n, _ℓ)
-    vec = zeros(length(_x))
-    vec[n] = _ℓ
+    vec = zeros(length(_x), n)
+
+    for i in 1:length(vec)
+        for j in 0:0.01:_ℓ
+            vec[n] = _ℓ
+        end
+    end
+    
     return  vec
 end
 
@@ -108,8 +114,6 @@ function Search(local_sol, _f, _ℓ, _γ, _η)
     push!(searchX, (local_sol[1] - vec)[1])
     push!(searchY, (local_sol[1] - vec)[2])
 
-    flush(stdout)
-    println("\n\n")
 
     for k in 1:length(local_sol[1])
 
@@ -120,7 +124,6 @@ function Search(local_sol, _f, _ℓ, _γ, _η)
             _ℓ *= _γ
             vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
 
-            println(k)
 
             push!(searchX, (local_sol[1] + vec)[1])
             push!(searchY, (local_sol[1] + vec)[2])
