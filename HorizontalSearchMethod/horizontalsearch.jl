@@ -131,23 +131,22 @@ function Search(local_sol, _f, _ℓ, _γ, _η)
 
 
 
-    # if _f(local_sol[1] + vec) < local_sol[2] + _η
-    #     return local_sol[1] + _ℓ, _ℓ
-    # else
-    #     return local_sol[1] - _ℓ, _ℓ
-    # end
+    if _f(local_sol[1] + vec) < local_sol[2] + _η
+        return local_sol[1] + vec, _ℓ
+    else
+        return local_sol[1] - vec, _ℓ
+    end
 end
 
 
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    Search(sol, _f, _ℓ, _γ, _η)
-    #s = Search(sol, _f, _ℓ, _γ, _η)
-    #x_prev = s[1]
+    s = Search(sol, _f, _ℓ, _γ, _η)
+    x_prev = s[1]
     #_ℓ = s[2]
 
-#=    while abs(norm(_x) - norm(x_prev)) > _η
+    while abs(norm(_x) - norm(x_prev)) > _η
 
         s = Search(sol, _f, _ℓ, _γ, _η)
         x_prev = s[1]
@@ -159,20 +158,20 @@ function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, ma
         _ℓ = s[2]
     end
 
-    sol = Newton(_f, _x, _ϵ)=#
+#    sol = Newton(_f, _x, _ϵ)
 
     return sol
 end
 
 
 
-x0 = [2,3]
+x0 = [4,3]
 ϵ = 1e-8
 η = 1e-2
 α = 0.5
 β = 0.8
 κ = 0.5
-ℓ = 2
+ℓ = 2.5
 γ = 0.5
 k = 1
 searchWidth = 10
@@ -187,13 +186,13 @@ searchY = []
 var = x0
 maxIterations = 150
 
-f(x) = x[1]^2 + x[2]^2 + 5*sin(x[1] + x[2])
+f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2])
 
 minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -4.0:0.03:4.0
-_y = -4.0:0.03:4.0
+_x = -5.0:0.03:5.0
+_y = -5.0:0.03:5.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
