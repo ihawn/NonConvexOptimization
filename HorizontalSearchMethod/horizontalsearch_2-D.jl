@@ -22,6 +22,7 @@ function Back_Line_Search(_x, _f, _fx, _∇f, _Δx, _α, _β, _κ)
     return _t
 end
 
+
 function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
     it = 0;
     t = 1
@@ -60,20 +61,11 @@ function Generate_ℓ_Vector(_x, n, _ℓ)
     return  vec
 end
 
-function Min_Location(a,b,c,d)
-    if c < d
-        return a
-    else
-        return b
-    end
-end
 
-
-function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
+function Search(local_sol, _f, _ℓ, _γ, _η)
 
     ℓ_start = _ℓ
     len = length(local_sol)
-    low = local_sol[2]
 
 
     vec = Generate_ℓ_Vector(local_sol[1], 1, _ℓ)
@@ -93,12 +85,10 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
 
         _ℓ = ℓ_start
         vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
-        prev_low = min(Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2], Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2])
 
-        while low >= prev_low + _η && _ℓ > _η
+        while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] - vec) >= local_sol[2] + _η && _ℓ > _η
             _ℓ *= _γ
             vec = Generate_ℓ_Vector(local_sol[1], k, _ℓ)
-            low = min(Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2], Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2])
 
 
             push!(searchX, (local_sol[1] + vec)[1])
@@ -107,15 +97,12 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
             push!(searchY, (local_sol[1] - vec)[2])
         end
 
-        prev_low = low
-    end
 
-
-
-    if Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2] < local_sol[2] + _η
-        return local_sol[1] + vec, _ℓ
-    else
-        return local_sol[1] - vec, _ℓ
+        if _f(local_sol[1] + vec) < local_sol[2] + _η
+            return local_sol[1] + vec, _ℓ
+        elseif _f(local_sol[1] - vec) < local_sol[2] + _η
+            return local_sol[1] - vec, _ℓ
+        end
     end
 end
 
@@ -123,43 +110,38 @@ end
 function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    s = Search(sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
+    s = Search(sol, _f, _ℓ, _γ, _η)
     x_prev = s[1]
     #_ℓ = s[2]
 
     while abs(norm(_x) - norm(x_prev)) > _η
 
-        s = Search(sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
+        s = Search(sol, _f, _ℓ, _γ, _η)
         x_prev = s[1]
-        #_ℓ = s[2]
+        _ℓ = s[2]
 
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
-        s = Search(sol, _f, _ℓ, _γ, _η, _κ, _α, _β)
+        s = Search(sol, _f, _ℓ, _γ, _η)
         _x = s[1]
-        #_ℓ = s[2]
-
-        println(sol)
+        _ℓ = s[2]
     end
 
 #    sol = Newton(_f, _x, _ϵ)
-    println(sol)
-    push!(finalSolX, sol[1][1])
-    push!(finalSolY, sol[1][2])
 
     return sol
 end
 
 
 
-x0 = [-4,4]
+x0 = [4,0]
 ϵ = 1e-8
 η = 1e-2
 α = 0.5
 β = 0.8
-κ = 1
+κ = 0.5
 ℓ = 2.5
-γ = 0.9
-
+γ = 0.8
+k = 1
 searchWidth = 10
 
 xPlot = []
@@ -168,8 +150,6 @@ solPlotX = []
 solPlotY = []
 searchX = []
 searchY = []
-finalSolX = []
-finalSolY = []
 
 var = x0
 maxIterations = 150
@@ -179,15 +159,14 @@ f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10sin(5x[1])
 minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -5.0:0.03:7.0
+_x = -5.0:0.03:5.0
 _y = -5.0:0.03:5.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
 plot(p1, legend = false)
-scatter!(searchX, searchY, markersize = 5, color = "pink")
+scatter!(searchX, searchY, markersize = 2.5)
 plot!(xPlot, yPlot, color = "white")
-scatter!(xPlot, yPlot, markersize = 2, color = "orange")
+scatter!(xPlot, yPlot, markersize = 2, color = "red")
 scatter!(solPlotX, solPlotY, color = "green")
-scatter!(finalSolX, finalSolY, color = "red")
