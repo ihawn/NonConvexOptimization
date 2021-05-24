@@ -156,15 +156,15 @@ end
 
 flush(stdout)
 
-x0 = [-10,10]
+x0 = [10,10]
 ϵ = 1e-8
-η = 1e-1
+η = 1e-3
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 5
-γ = 0.8
-ρ = 10
+ℓ = 4
+γ = 0.995
+ρ = 200
 searchWidth = 10
 
 
@@ -180,14 +180,17 @@ finalSolY = []
 var = x0
 maxIterations = 150
 
-f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10sin(5x[1])
+f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + 6x[2]) + 10*sin(10x[1])
+#f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 
 
 @time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -10.0:0.03:10.0
-_y = -10.0:0.03:10.0
+_x = -4.0:0.03:10.0
+_y = -4.0:0.03:10.0
+#_x = 0.0:0.03:15.0
+#_y = -5.0:0.03:20.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
