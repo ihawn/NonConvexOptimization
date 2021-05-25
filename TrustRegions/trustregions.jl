@@ -17,8 +17,8 @@ function m(_p, _fx, _∇f, _∇2f)
 end
 
 
-function Rho(_fx, _f, _x, _p, _m)
-    return
+function Rho(_fx, _f, _x, _p, _m, _∇f, _∇2f)
+    return (_fx - _f(_x + _p))/(_m(0, _fx, _∇f, _∇2f) - _m(_p, _fx, _∇f, _∇2f))
 end
 
 
@@ -35,11 +35,14 @@ function Subproblem_Cauchy_Point(_Δk, _∇f, _∇2f)
 end
 
 
-function Trust_Region(_f, _x, itt)
+function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, itt)
 
     for k = 1:itt
+        fx = _f(_x)
+        ∇f = Compute_Gradient(_f, _x)
+        ∇2f = Compute_Hessian(_f, _x)
 
-
+        ρ = Rho(fx, _f, _x, _p, m, ∇f, ∇2f)
 
     end
 
