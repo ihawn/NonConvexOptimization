@@ -36,6 +36,24 @@ function Subproblem_Cauchy_Point(_Δk, _∇f, _∇2f)
 end
 
 
+function Conj_Grad_Steihaug(_Δk, _∇f, _∇2f, _ϵ, _itt)
+    z = 0
+    r = _∇f
+    d = -r
+
+    if norm(r) < _ϵ
+        return 0
+    end
+
+    for j = 0:_itt
+        if transpose(d)*_∇2f*d <= 0
+
+        end
+    end
+
+end
+
+
 function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, _δ, itt)
 
     println("\n\n")
@@ -68,6 +86,8 @@ function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, _δ, 
         println("x = ", _x)
         println("f(x) = ", _f(_x))
 
+        push!(xPlot, _x[1])
+        push!(yPlot, _x[2])
 
         if norm(∇f) <= _ϵ
             break
@@ -77,20 +97,38 @@ end
 
 flush(stdout)
 
-#f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + 6x[2]) + 10*sin(5x[1])
-f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
+f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
+#f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 
 η1 = 0.2
 η2 = 0.25
 η3 = 0.75
 t1 = 0.25
 t2 = 2.0
-x0 = [6.0, 14.0]
+x0 = [10.0, 10.0]
 Δk = 2.0
-Δm = 5.0
+Δm = 4.0
 ϵ = 1e-2
 δ = 1e-3
 maxIterations = 1e3
 
 
+xPlot = []
+yPlot = []
+
+
 Trust_Region(f, x0, Δk, Δm, η1, η2, η3, t1, t2, ϵ, δ, maxIterations)
+
+
+plotf(x,y) = f([x, y])
+# _x = -5.0:0.03:10.0
+# _y = 0.0:0.03:15.0
+_x = -10.0:0.03:10.0
+_y = -10.0:0.03:10.0
+X = repeat(reshape(_x, 1, :), length(_y), 1)
+Y = repeat(_y, 1, length(_x))
+Z = map(plotf, X, Y)
+p1 = Plots.contour(_x,_y, plotf, fill = true)
+plot(p1, legend = false, title = "Global Minimization With Trust Regions")
+plot!(xPlot, yPlot, color = "white")
+scatter!(xPlot, yPlot, color = "red", markersize = 2)
