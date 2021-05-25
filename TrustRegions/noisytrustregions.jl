@@ -1,6 +1,8 @@
 using Plots
 using Calculus
 using LinearAlgebra
+include("trustregions.jl")
+
 
 function Compute_Gradient(_f, _x)
     return Calculus.gradient(g -> _f(g),_x)
@@ -105,6 +107,8 @@ function Noisy_Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ,
             break
         end
     end
+
+    return _x
 end
 
 flush(stdout)
@@ -124,15 +128,20 @@ x0 = [10.0, 10.0]
 δ = 1e-3
 ℓ = 5
 ρ = 1000
-maxIterations = 2e3
+maxIterations = 2e2
 
 
 xPlot = []
 yPlot = []
+solX = []
+solY = []
 
 
-Noisy_Trust_Region(f, x0, Δk, Δm, η1, η2, η3, t1, t2, ϵ, δ, ℓ, ρ, maxIterations)
+solPos = Noisy_Trust_Region(f, x0, Δk, Δm, η1, η2, η3, t1, t2, ϵ, δ, ℓ, ρ, maxIterations)
+solPos = Trust_Region(f, solPos, Δk, Δm, η1, η2, η3, t1, t2, ϵ, δ, maxIterations)
 
+push!(solX, solPos[1])
+push!(solY, solPos[2])
 
 plotf(x,y) = f([x, y])
 # _x = -5.0:0.03:10.0
@@ -143,6 +152,7 @@ X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, title = "Global Minimization With Trust Regions")
+plot(p1, legend = false, title = "Global Minimization With Noisy Trust Regions")
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, color = "red", markersize = 2)
+scatter!(solX, solY, color = "green")

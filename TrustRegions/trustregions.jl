@@ -54,6 +54,8 @@ function Conj_Grad_Steihaug(_Δk, _∇f, _∇2f, _ϵ, _itt)
 end
 
 
+export Trust_Region
+
 function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, _δ, itt)
 
     println("\n\n")
@@ -93,6 +95,8 @@ function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, _δ, 
             break
         end
     end
+
+    return _x
 end
 
 flush(stdout)
