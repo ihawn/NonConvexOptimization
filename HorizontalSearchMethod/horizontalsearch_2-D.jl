@@ -180,15 +180,15 @@ finalSolY = []
 var = x0
 maxIterations = 150
 
-f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + 6x[2]) + 10*sin(5x[1])
+f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 
 
 @time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -4.0:0.03:10.0
-_y = -4.0:0.03:10.0
+_x = -10.0:0.03:10.0
+_y = -10.0:0.03:10.0
 #_x = 0.0:0.03:15.0
 #_y = -5.0:0.03:20.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
