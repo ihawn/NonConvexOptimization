@@ -72,7 +72,7 @@ function Ave_Grad(_f, _x, _ℓ, _ρ)
 end
 
 
-function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ, maxIt)
+function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _ρ, maxIt)
     it = 0;
     t = 1
     ∇f = Compute_Gradient(_f, _x)
@@ -83,7 +83,7 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ, maxIt)
     push!(xPlot, _x[1])
     push!(yPlot, _x[2])
 
-    while normGrad > _ϵ && it < maxIt
+    while normGrad > _η && it < maxIt
         ∇f = Compute_Gradient(_f, _x)
         ∇f_ave = Ave_Grad(_f, _x, _ℓ, _ρ)
         normGrad = norm(∇f)
@@ -104,13 +104,16 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ, maxIt)
     push!(solPlotX, _x[1])
     push!(solPlotY, _x[2])
 
-    return _x, val
+    sol = Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
+
+    return sol
 end
 
 flush(stdout)
 
 x0 = [10,10]
-ϵ = 1e-4
+ϵ = 1e-16
+η = 1e-2
 η = 1e-3
 α = 0.5
 β = 0.8
@@ -136,7 +139,7 @@ f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 
 
-@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, κ, ℓ, ρ, maxIterations)
+@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
 println(minimum)
 
 
@@ -152,4 +155,4 @@ plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
 #scatter!(noiseX, noiseY, markersize = 1)
 scatter!(solPlotX, solPlotY, color = "green")
-scatter!(finalSolX, finalSolY, color = "white")
+scatter!(finalSolX, finalSolY, color = "green")
