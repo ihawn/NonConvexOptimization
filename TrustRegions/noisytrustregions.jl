@@ -2,6 +2,8 @@ using Plots
 using Calculus
 using LinearAlgebra
 include("trustregions.jl")
+include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
+
 
 
 function Compute_Gradient(_f, _x)
@@ -113,20 +115,21 @@ end
 
 flush(stdout)
 
-f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
+#f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
+f(x) = Ackley(x)
 
 η1 = 0.2
 η2 = 0.25
 η3 = 0.75
 t1 = 0.25
 t2 = 2.0
-x0 = [10.0, 10.0]
+x0 = [-4.3, 4.0]
 Δk = 2.0
 Δm = 4.0
 ϵ = 1e-2
 δ = 1e-3
-ℓ = 5
+ℓ = 500
 ρ = 1000
 maxIterations = 2e2
 

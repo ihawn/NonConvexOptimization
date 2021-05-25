@@ -1,6 +1,8 @@
 using Plots
 using Calculus
 using LinearAlgebra
+include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
+
 
 function Compute_Gradient(_f, _x)
     return Calculus.gradient(g -> _f(g),_x)
@@ -156,7 +158,7 @@ end
 
 flush(stdout)
 
-x0 = [10,10]
+x0 = [-5.0,5.0]
 ϵ = 1e-8
 η = 1e-3
 α = 0.5
@@ -180,9 +182,10 @@ finalSolY = []
 var = x0
 maxIterations = 150
 
-f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
+#f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
-
+#f(x) = Rastrigin(x, 2)
+f(x) = Ackley(x)
 
 @time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 

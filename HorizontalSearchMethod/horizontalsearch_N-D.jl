@@ -59,22 +59,7 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 end
 
 
-function Ave_Grad(_f, _x, _ℓ, _ρ)
-    sum = Compute_Gradient(_f, _x)
-
-    for i = 1:_ρ
-        vec = (rand(length(_x)) .- 0.5) * _ℓ + _x
-        sum += Compute_Gradient(_f, vec)
-
-        push!(noiseX, vec[1])
-        push!(noiseY, vec[2])
-    end
-
-    return sum/(_ρ + 1)
-end
-
-
-function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _ρ, maxIt)
+function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
     it = 0;
     t = 1
     ∇f = Compute_Gradient(_f, _x)
@@ -85,78 +70,139 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _ρ, maxIt)
     push!(xPlot, _x[1])
     push!(yPlot, _x[2])
 
-    while normGrad > _η && it < maxIt
+    while normGrad > _ϵ
         ∇f = Compute_Gradient(_f, _x)
-        ∇f_ave = Ave_Grad(_f, _x, _ℓ, _ρ)
         normGrad = norm(∇f)
 
-        bls = Back_Line_Search(_x, _f, val, ∇f, -∇f_ave, _α, _β, _κ)
+        bls = Back_Line_Search(_x, _f, val, ∇f, -∇f, _α, _β, _κ)
         t = bls[1]
-        _x -= t*∇f_ave
+        _x -= t*∇f
         val = _f(_x)
 
         push!(xPlot, _x[1])
         push!(yPlot, _x[2])
-
-        it += 1
     end
-
-    println("\nIterations: ", it)
 
     push!(solPlotX, _x[1])
     push!(solPlotY, _x[2])
 
+    return _x, val
+end
+
+
+function Generate_ℓ_Vector(_x, _ℓ, _k, _ρ)
+
+    # vec = zeros(length(_x))
+    # vec[1] = _ℓ*sin(pi*_k/_ρ)
+    # vec[2] = _ℓ*cos(pi*_k/_ρ)
+
+
+
+    return (rand(length(_x)) .- 0.5) * _ℓ  #vec
+end
+
+
+function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
+
+    ℓ_start = _ℓ
+
+    for k in 1:_ρ
+
+
+        _ℓ = ℓ_start
+        vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
+
+        while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] - vec) >= local_sol[2] + _η && _ℓ > _η
+            _ℓ *= _γ
+            vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
+
+
+            push!(searchX, (local_sol[1] + vec)[1])
+            push!(searchY, (local_sol[1] + vec)[2])
+            push!(searchX, (local_sol[1] - vec)[1])
+            push!(searchY, (local_sol[1] - vec)[2])
+        end
+
+
+        if _f(local_sol[1] + vec) < local_sol[2] - _η
+            return local_sol[1] + vec, _ℓ
+        elseif _f(local_sol[1] - vec) < local_sol[2] - _η
+            return local_sol[1] - vec, _ℓ
+        end
+    end
+
+    return local_sol[1], _ℓ
+end
+
+
+function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, width, maxIt)
+
+    sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
+    s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+    x_prev = s[1]
+
+    while abs(norm(_x) - norm(x_prev)) > _η
+
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+        x_prev = s[1]
+
+        sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+        _x = s[1]
+    end
+
     sol = Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
+
+    println(sol)
 
     return sol
 end
 
 flush(stdout)
 
-x0 = [-5.0,4.25]
-ϵ = 1e-16
-η = 1e-2
+x0 = [-10.0,10.0]
+ϵ = 1e-8
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 500
-ρ = 500
-
+ℓ = 4
+γ = 0.99
+ρ = 50
+searchWidth = 10
 
 
 xPlot = []
 yPlot = []
-noiseX = []
-noiseY = []
 solPlotX = []
 solPlotY = []
+searchX = []
+searchY = []
 finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 1e3
+maxIterations = 150
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
-#f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
 f(x) = Ackley(x)
 
-@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
-println(minimum)
-
+@time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
 _x = -10.0:0.03:10.0
 _y = -10.0:0.03:10.0
+#_x = 0.0:0.03:15.0
+#_y = -5.0:0.03:20.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, title = "Global Minimization With Noisy Gradient Descent")
+plot(p1, legend = false, title = "Global Minimization With Horizontal Search")
+#scatter!(searchX, searchY, markersize = 2.5)
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
-#scatter!(noiseX, noiseY, markersize = 1)
 scatter!(solPlotX, solPlotY, color = "green")
-scatter!(finalSolX, finalSolY, color = "green")
+scatter!(finalSolX, finalSolY, color = "white")
