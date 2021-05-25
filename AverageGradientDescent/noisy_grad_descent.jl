@@ -57,25 +57,22 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 end
 
 
-function Generate_Sparse_Vector(a, n, _x)
-    vec = zeros(length(_x))
-    vec[n] = a
-    return vec
-end
-
-
 function Ave_Grad(_f, _x, _ℓ, _ρ)
     sum = Compute_Gradient(_f, _x)
 
     for i = 1:_ρ
-        sum += Compute_Gradient(_f, _x + rand(length(_x)*_ℓ))
+        vec = (rand(length(_x)) .- 0.5) * _ℓ + _x
+        sum += Compute_Gradient(_f, vec)
+
+        push!(noiseX, vec[1])
+        push!(noiseY, vec[2])
     end
 
     return sum/(_ρ + 1)
 end
 
 
-function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ maxIt)
+function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ, maxIt)
     it = 0;
     t = 1
     ∇f = Compute_Gradient(_f, _x)
@@ -102,6 +99,8 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, _ℓ, _ρ maxIt)
         it += 1
     end
 
+    println("\nIterations: ", it)
+
     push!(solPlotX, _x[1])
     push!(solPlotY, _x[2])
 
@@ -116,26 +115,28 @@ x0 = [10,10]
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 0.5
-ρ = 50
+ℓ = 500
+ρ = 500
 searchWidth = 10
 
 
 xPlot = []
 yPlot = []
+noiseX = []
+noiseY = []
 solPlotX = []
 solPlotY = []
 finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 1e4
+maxIterations = 1e3
 
 f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 
 
-@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, κ, ℓ, ρ maxIterations)
+@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, κ, ℓ, ρ, maxIterations)
 println(minimum)
 
 
@@ -146,8 +147,9 @@ X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, title = "Global Minimization With Horizontal Search")
+plot(p1, legend = false, title = "Global Minimization With Noisy Gradient Descent")
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
+#scatter!(noiseX, noiseY, markersize = 1)
 scatter!(solPlotX, solPlotY, color = "green")
 scatter!(finalSolX, finalSolY, color = "white")
