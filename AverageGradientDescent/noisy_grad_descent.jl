@@ -113,15 +113,15 @@ end
 
 flush(stdout)
 
-x0 = [-5.0,4.25]
+x0 = [-4.0,2.0]
 ϵ = 1e-16
 η = 1e-2
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 500
-ρ = 500
+ℓ = 50
+ρ = 50
 
 
 
@@ -142,7 +142,9 @@ maxIterations = 1e3
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
 #f(x) = Ackley(x)
-f(x) = Rosenbrock(x, 2)
+#f(x) = Rosenbrock(x, 2)
+#f(x) = Beale(x)
+f(x) = Bukin(x)
 
 @time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
 println(minimum)
