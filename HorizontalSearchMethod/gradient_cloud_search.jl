@@ -91,28 +91,20 @@ end
 
 
 function Generate_ℓ_Vector(_x, _ℓ, _k, _ρ)
-
-    # vec = zeros(length(_x))
-    # vec[1] = _ℓ*sin(pi*_k/_ρ)
-    # vec[2] = _ℓ*cos(pi*_k/_ρ)
-
-
-
-    return (rand(length(_x)) .- 0.5) * _ℓ  #vec
+    return (rand(length(_x)) .- 0.5) * _ℓ
 end
 
 
-function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
+function Search(local_sol, _f, _ℓ, _γ, _η, _ρ, _α, _β, _κ)
 
     ℓ_start = _ℓ
 
     for k in 1:_ρ
 
-
         _ℓ = ℓ_start
         vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
 
-        while _f(local_sol[1] + vec) >= local_sol[2] + _η && _f(local_sol[1] - vec) >= local_sol[2] + _η && _ℓ > _η
+        while Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2] >= local_sol[2] + _η && Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2] >= local_sol[2] + _η && _ℓ > _η
             _ℓ *= _γ
             vec = Generate_ℓ_Vector(local_sol[1], _ℓ, k, _ρ)
 
@@ -124,9 +116,9 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
         end
 
 
-        if _f(local_sol[1] + vec) < local_sol[2] - _η
+        if Grad_Descent(_f, local_sol[1] + vec, _α, _β, _η, _κ)[2] < local_sol[2] - _η
             return local_sol[1] + vec, _ℓ
-        elseif _f(local_sol[1] - vec) < local_sol[2] - _η
+        elseif Grad_Descent(_f, local_sol[1] - vec, _α, _β, _η, _κ)[2] < local_sol[2] - _η
             return local_sol[1] - vec, _ℓ
         end
     end
@@ -135,20 +127,20 @@ function Search(local_sol, _f, _ℓ, _γ, _η, _ρ)
 end
 
 
-function Horizontal_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, width, maxIt)
+function Grad_Cloud_Search(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, width, maxIt)
 
     sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
-    s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+    s = Search(sol, _f, _ℓ, _γ, _η, _ρ, _α, _β, _κ)
     x_prev = s[1]
     it = 0
 
     while abs(norm(_x) - norm(x_prev)) > _η && it < maxIt
 
-        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ, _α, _β, _κ)
         x_prev = s[1]
 
         sol = Grad_Descent(_f, x_prev, _α, _β, _η, _κ)
-        s = Search(sol, _f, _ℓ, _γ, _η, _ρ)
+        s = Search(sol, _f, _ℓ, _γ, _η, _ρ, _α, _β, _κ)
         _x = s[1]
 
         it +=1
@@ -169,9 +161,9 @@ x0 = [-10.0,10.0]
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 4
-γ = 0.99
-ρ = 50
+ℓ = 5
+γ = 0.5
+ρ = 2
 searchWidth = 10
 
 
@@ -190,10 +182,10 @@ maxIterations = 150
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = Rastrigin(x, 2)
-#f(x) = Ackley(x)
-f(x) = Bukin(x)
+f(x) = Ackley(x)
+#f(x) = Bukin(x)
 
-@time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
+@time minimum = Grad_Cloud_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
 _x = -10.0:0.03:10.0
@@ -204,7 +196,7 @@ X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, title = "Global Minimization With Horizontal Search")
+plot(p1, legend = false, title = "Global Minimization With Gradient Cloud Search")
 #scatter!(searchX, searchY, markersize = 2.5)
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")

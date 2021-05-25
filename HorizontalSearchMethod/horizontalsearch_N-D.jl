@@ -163,14 +163,14 @@ end
 
 flush(stdout)
 
-x0 = [-10.0,10.0]
+x0 = [-100.0,100.0]
 ϵ = 1e-8
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 0.1
-ℓ = 4
-γ = 0.99
+ℓ = 100
+γ = 0.5
 ρ = 50
 searchWidth = 10
 
@@ -191,13 +191,15 @@ maxIterations = 150
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = Rastrigin(x, 2)
 #f(x) = Ackley(x)
-f(x) = Bukin(x)
+#f(x) = Bukin(x)
+#f(x) = Holder_Table(x)
+f(x) = Schaffer_N2(x)
 
 @time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -10.0:0.03:10.0
-_y = -10.0:0.03:10.0
+_x = -100.0:0.5:100.0
+_y = -100.0:0.5:100.0
 #_x = 0.0:0.03:15.0
 #_y = -5.0:0.03:20.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)

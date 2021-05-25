@@ -119,8 +119,8 @@ x0 = [-4.0,2.0]
 η = 1e-3
 α = 0.5
 β = 0.8
-κ = 0.1
-ℓ = 50
+κ = 1
+ℓ = 5
 ρ = 50
 
 
@@ -144,7 +144,8 @@ maxIterations = 1e3
 #f(x) = Ackley(x)
 #f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
-f(x) = Bukin(x)
+#f(x) = Bukin(x)
+f(x) = Holder_Table(x)
 
 @time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
 println(minimum)
