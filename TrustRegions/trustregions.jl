@@ -13,43 +13,46 @@ end
 
 
 function m(_p, _fx, _∇f, _∇2f)
-    return _fx + transpose(_∇f)*_p + (1/2)*transpose(_p)*_∇2f*_p
+    return _fx + transpose(_∇f)*_p + transpose(_p)*_∇2f*_p/2.0
 end
 
 
 function Rho(_fx, _f, _x, _p, _m, _∇f, _∇2f)
-    return (_fx - _f(_x + _p))/(_m(0, _fx, _∇f, _∇2f) - _m(_p, _fx, _∇f, _∇2f))
+    return (_fx - _f(_x + _p))/(_m(zeros(length(_x)), _fx, _∇f, _∇2f) - _m(_p, _fx, _∇f, _∇2f))
 end
 
 
-function Subproblem_Cauchy_Point(_Δk, _∇f, _∇2f, _nrm_Δk)
+function Subproblem_Cauchy_Point(_Δk, _∇f, _∇2f)
 
     τ = 1.0
+    nrm_Δf = norm(_∇f)
     val = transpose(_∇f) * _∇2f * _∇f
 
     if val > 0
-        τ = min(norm(_∇f)^3 / (_Δk * val), 1.0)
+        τ = min(nrm_Δf^3 / (_Δk * val), 1.0)
     end
 
-    return -τ * _Δk/norm(_∇f) * _∇f
+    return -τ * _Δk/nrm_Δf * _∇f
 end
 
 
-function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, itt)
+function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, _δ, itt)
+
+    println("\n\n")
 
     for k = 1:itt
         fx = _f(_x)
         ∇f = Compute_Gradient(_f, _x)
         ∇2f = Compute_Hessian(_f, _x)
-        nrm_Δk = norm(_Δk)
 
-        p = Subproblem_Cauchy_Point(_Δk, _∇f, _∇2f, nrm_Δk) #Solve trust region subproblem
 
-        ρ = Rho(fx, _f, _x, _p, m, ∇f, ∇2f)
+        p = Subproblem_Cauchy_Point(_Δk, ∇f, ∇2f) #Solve trust region subproblem
+
+        ρ = Rho(fx, _f, _x, p, m, ∇f, ∇2f)
 
         if ρ < _η2
             _Δk *= _t1
-        elseif ρ > _η3 && abs(p - nrm_Δk) <= _ϵ
+        elseif ρ > _η3 && abs(norm(p) - _Δk) <= _δ
             _Δk = min(_t2*_Δk, _Δm)
         else
             #do nothing i.e. _Δk remains the same
@@ -63,8 +66,31 @@ function Trust_Region(_f, _x, _Δk, _Δm, _η1, _η2, _η3, _t1, _t2, _ϵ, itt)
 
         println("Iteration: ", k)
         println("x = ", _x)
-        println("f(x) = ", _x)
+        println("f(x) = ", _f(_x))
 
+
+        if norm(∇f) <= _ϵ
+            break
+        end
     end
-
 end
+
+flush(stdout)
+
+#f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + 6x[2]) + 10*sin(5x[1])
+f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
+
+η1 = 0.2
+η2 = 0.25
+η3 = 0.75
+t1 = 0.25
+t2 = 2.0
+x0 = [6.0, 14.0]
+Δk = 2.0
+Δm = 5.0
+ϵ = 1e-2
+δ = 1e-3
+maxIterations = 1e3
+
+
+Trust_Region(f, x0, Δk, Δm, η1, η2, η3, t1, t2, ϵ, δ, maxIterations)
