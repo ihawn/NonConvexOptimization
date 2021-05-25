@@ -163,7 +163,7 @@ end
 
 flush(stdout)
 
-x0 = [-100.0,100.0]
+x0 = [-5.0,5.0]
 ϵ = 1e-8
 η = 1e-3
 α = 0.5
@@ -193,13 +193,14 @@ maxIterations = 150
 #f(x) = Ackley(x)
 #f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
-f(x) = Schaffer_N2(x)
+#f(x) = Schaffer_N2(x)
+f(x) = Styblinski_Tang(x,2)
 
 @time minimum = Horizontal_Search(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, searchWidth, maxIterations)
 
 plotf(x,y) = f([x, y])
-_x = -100.0:0.5:100.0
-_y = -100.0:0.5:100.0
+_x = -5.0:0.05:5.0
+_y = -5.0:0.05:5.0
 #_x = 0.0:0.03:15.0
 #_y = -5.0:0.03:20.0
 X = repeat(reshape(_x, 1, :), length(_y), 1)
