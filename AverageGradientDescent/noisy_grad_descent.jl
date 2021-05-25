@@ -141,7 +141,8 @@ maxIterations = 1e3
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
-f(x) = Ackley(x)
+#f(x) = Ackley(x)
+f(x) = Rosenbrock(x, 2)
 
 @time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
 println(minimum)
