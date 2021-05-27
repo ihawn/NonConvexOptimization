@@ -118,19 +118,21 @@ function Monte_Carlo_Step(old_val, _f, _x, _ℓ, _η, _α, _β, _κ, _T)
 end
 
 
-function Adjust_Step_Length(target_rate, rate, scale_factor, _ℓ, _ℓ_range,)
+function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_range,)
 
-    if rate > target_rate #stuck in a local min so increase step length
-        _ℓ = min(_ℓ_range[2], ℓ/scale_factor)
-    else #random search is all over the place so take smaller steps
-        _ℓ = max(_ℓ_range[1], ℓ*scale_factor)
+    if rate > target_rate + _ϕ #stuck in a local min so increase step length
+        _ℓ = min(_ℓ_range[2], _ℓ/scale_factor)
+    elseif rate < target_rate - _ϕ #random search is all over the place so take smaller steps
+        _ℓ = max(_ℓ_range[1], _ℓ*scale_factor)
     end
 
     return _ℓ
 end
 
 
-function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _T, target_rate, maxIt, stat_thresh)
+function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
+
+    println("Starting Basin Hopping")
 
     static_count = 0
     acceptance = 0
@@ -164,38 +166,38 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
         end
 
         acceptance_rate = acceptance/(acceptance + rejection)
-        _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, γ, _ℓ, _ℓ_range,)
+        _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, _γ, _ϕ, _ℓ, _ℓ_range,)
 
 
         println("\nIteration ", i)
-        println(static_count)
         println("Step Acceptance Rate = ", 100*acceptance_rate, "%")
         println("Step size = ", _ℓ)
         println("x = ", _x)
         println("Objective = ", val)
     end
 
-    sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
+    min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
 
-    println(sol)
+    println(min_sol)
 
-    return sol
+    return min_sol
 end
 
 flush(stdout)
 
-x0 = [-10.0,10.0]
+n = 2
+x0 = ones(n) * 3.0
 ϵ = 1e-8
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 1
-ℓ_range = (0.001, 250)
-γ = 0.99
-ρ = 2
-T = 10
-static_threshold = 100 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+ℓ = 150
+ℓ_range = (1, 25)
+γ = 0.9
+ϕ = 0.0
+T = 10000
+static_threshold = 1e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.5
 
 
@@ -209,30 +211,35 @@ finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 5e3
+maxIterations = 1e4
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
-f(x) = Rastrigin(x, 2)
+#f(x) = Rastrigin(x, n)
 #f(x) = Ackley(x)
 #f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
 #f(x) = Schaffer_N2(x)
-#f(x) = Styblinski_Tang(x,2)
+#f(x) = Styblinski_Tang(x,n)
+#f(x) = Beale(x)
+#f(x) = Rosenbrock(x, n)
+#f(x) = Easom(x)
 
-@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, T,
+@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
 
-plotf(x,y) = f([x, y])
-_x = -10.0:0.03:10.0
-_y = -10.0:0.03:10.0
-X = repeat(reshape(_x, 1, :), length(_y), 1)
-Y = repeat(_y, 1, length(_x))
-Z = map(plotf, X, Y)
-p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, #=xrange = (-10,10), yrange = (-10,10),=# title = "Global Minimization With Basin Hopping")
-scatter!(searchX, searchY, markersize = 2.5, color = "blue")
-plot!(xPlot, yPlot, color = "white")
-scatter!(xPlot, yPlot, markersize = 2, color = "red")
-scatter!(solPlotX, solPlotY, color = "green")
-scatter!(finalSolX, finalSolY, color = "white")
+if n == 2
+    plotf(x,y) = f([x, y])
+    _x = -10.0:0.03:10.0
+    _y = -10.0:0.03:10.0
+    X = repeat(reshape(_x, 1, :), length(_y), 1)
+    Y = repeat(_y, 1, length(_x))
+    Z = map(plotf, X, Y)
+    p1 = Plots.contour(_x,_y, plotf, fill = true)
+    plot(p1, legend = false, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping")
+    scatter!(searchX, searchY, markersize = 2.5, color = "blue")
+#    plot!(xPlot, yPlot, color = "white")
+    scatter!(xPlot, yPlot, markersize = 2, color = "red")
+    scatter!(solPlotX, solPlotY, color = "green")
+    scatter!(finalSolX, finalSolY, color = "white")
+end
