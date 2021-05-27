@@ -118,14 +118,25 @@ function Monte_Carlo_Step(old_val, _f, _x, _ℓ, _η, _α, _β, _κ, _T)
 end
 
 
-function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, _T, width, maxIt)
+function Adjust_Step_Length(target_rate, rate, scale_factor, _ℓ)
 
+    if rate > target_rate #stuck in a local min so increase step length
+        _ℓ /= scale_factor
+    else #random search is all over the place so take smaller steps
+        _ℓ *= scale_factor
+    end
+
+    return _ℓ
+end
+
+
+function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, _T, target_rate, width, maxIt)
 
     acceptance = 0
     rejection = 0
 
-
     for i = 1:maxIt
+        println("Iteration ", i)
         sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
         accept = Monte_Carlo_Step(sol[2], _f, _x, _ℓ, _η, _α, _β, _κ, _T)
 
@@ -136,6 +147,8 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _γ, _ρ, _T, widt
             rejection += 1
         end
 
+        acceptance_rate = acceptance/(acceptance + rejection)
+        _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, γ, _ℓ)
     end
 
     sol = Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
@@ -156,8 +169,9 @@ x0 = [-10.0,10.0]
 ℓ = 1
 γ = 0.5
 ρ = 2
-T = 0.01
+T = 10
 searchWidth = 10
+target_acc_rate = 0.5
 
 
 xPlot = []
@@ -170,13 +184,16 @@ finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 500
+maxIterations = 5e2
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = Rastrigin(x, 2)
 f(x) = Ackley(x)
 #f(x) = Bukin(x)
+#f(x) = Holder_Table(x)
+#f(x) = Schaffer_N2(x)
+#f(x) = Styblinski_Tang(x,2)
 
 @time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, γ, ρ, T, searchWidth, maxIterations)
 
@@ -189,8 +206,8 @@ X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true)
-plot(p1, legend = false, title = "Global Minimization With Gradient Cloud Search")
-#scatter!(searchX, searchY, markersize = 2.5)
+plot(p1, legend = false, title = "Global Minimization With Basin Hopping")
+scatter!(searchX, searchY, markersize = 2.5, color = "blue")
 plot!(xPlot, yPlot, color = "white")
 scatter!(xPlot, yPlot, markersize = 2, color = "red")
 scatter!(solPlotX, solPlotY, color = "green")

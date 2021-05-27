@@ -113,14 +113,14 @@ end
 
 flush(stdout)
 
-x0 = [-4.0,2.0]
+x0 = [-10.0,10.0]
 ϵ = 1e-16
 η = 1e-2
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 5
+ℓ = 2
 ρ = 50
 
 
@@ -137,7 +137,7 @@ finalSolY = []
 var = x0
 maxIterations = 1e3
 
-#f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
+f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
@@ -145,7 +145,7 @@ maxIterations = 1e3
 #f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
 #f(x) = Bukin(x)
-f(x) = Holder_Table(x)
+#f(x) = Holder_Table(x)
 
 @time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
 println(minimum)
