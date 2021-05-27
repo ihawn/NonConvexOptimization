@@ -185,15 +185,15 @@ end
 
 flush(stdout)
 
-n = 20
+n = 25
 x0 = rand(n) * 10.0
 ϵ = 1e-8
-η = 1e-3
+η = 1e-5
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 150
-ℓ_range = (1, 25)
+ℓ = 1
+ℓ_range = (0.01, 25)
 γ = 0.9
 ϕ = 0.0
 T = 10000
@@ -222,11 +222,11 @@ maxIterations = 1e4
 #f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
-#f(x) = Rosenbrock(x, n)
+f(x) = Rosenbrock(x, n)
 #f(x) = Easom(x)
 
-#@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
-#                            target_acc_rate, maxIterations, static_threshold)
+@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+                            target_acc_rate, maxIterations, static_threshold)
 
 if n == 2
     plotf(x,y) = f([x, y])
@@ -238,7 +238,7 @@ if n == 2
     p1 = Plots.contour(_x,_y, plotf, fill = true)
     plot(p1, legend = false, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping")
     scatter!(searchX, searchY, markersize = 2.5, color = "blue")
-#    plot!(xPlot, yPlot, color = "white")
+    plot!(xPlot, yPlot, color = "white")
     scatter!(xPlot, yPlot, markersize = 2, color = "red")
     scatter!(solPlotX, solPlotY, color = "green")
     scatter!(finalSolX, finalSolY, color = "white")

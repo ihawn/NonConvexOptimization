@@ -1,6 +1,7 @@
 using Plots
 using Calculus
 using LinearAlgebra
+using Statistics
 include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
 
 
@@ -54,6 +55,8 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 
     push!(finalSolX, _x[1])
     push!(finalSolY, _x[2])
+    push!(xPlot, _x[1])
+    push!(yPlot, _x[2])
 
     return _x, val
 end
@@ -74,23 +77,49 @@ function Ave_Grad(_f, _x, _ℓ, _ρ)
 end
 
 
-function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _ρ, maxIt)
-    it = 0;
-    t = 1
-    ∇f = Compute_Gradient(_f, _x)
-    normGrad = norm(∇f)
+function Collect_Grad(_f, _x, _ℓ, _ρ)
+    ∇ = rand(Float64, _ρ, length(_x))
 
+
+    for i = 1:_ρ
+        vec = (rand(length(_x)) .- 0.5) * _ℓ + _x
+        ∇[i,:] = Compute_Gradient(_f, vec)
+    end
+
+    return ∇
+end
+
+
+function Dynamic_Mean_∇(_f, _x, _ℓ, _γ, _ρ, ∇_ag_thresh, maxIt)
+    ∇ = Collect_Grad(_f, _x, _ℓ, _ρ)
+
+    for i = 1:maxIt
+        if std(normalize(∇)) <= ∇_ag_thresh
+            break
+        end
+
+        ∇ = Collect_Grad(_f, _x, _ℓ, _ρ)
+        _ℓ *= _γ
+    end
+
+
+
+    return mean(transpose(∇), dims=2)
+end
+
+
+function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _γ, _ρ, ∇_ag_thresh, maxIt)
+    t = 1
     val = _f(_x)
 
     push!(xPlot, _x[1])
     push!(yPlot, _x[2])
 
-    while normGrad > _η && it < maxIt
-        ∇f = Compute_Gradient(_f, _x)
-        ∇f_ave = Ave_Grad(_f, _x, _ℓ, _ρ)
-        normGrad = norm(∇f)
+    for i = 1:maxIt
 
-        bls = Back_Line_Search(_x, _f, val, ∇f, -∇f_ave, _α, _β, _κ)
+        ∇f_ave = Dynamic_Mean_∇(_f, _x, _ℓ, _γ, _ρ, ∇_ag_thresh, maxIt)
+
+        bls = Back_Line_Search(_x, _f, val, ∇f_ave, -∇f_ave, _α, _β, _κ)
         t = bls[1]
         _x -= t*∇f_ave
         val = _f(_x)
@@ -98,7 +127,10 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _ρ, maxIt)
         push!(xPlot, _x[1])
         push!(yPlot, _x[2])
 
-        it += 1
+
+        println("\nIteration ", it)
+        println("x = ", _x)
+        println("f(x) = ", val)
     end
 
     println("\nIterations: ", it)
@@ -113,16 +145,19 @@ end
 
 flush(stdout)
 
-n = 25
-x0 = ones(n) * 4
-ϵ = 1e-16
-η = 1e-2
+n = 2
+range = 100
+x0 = 2 * (rand(n) .- 0.5) * range
+ϵ = 1e-8
+η = 1e-5
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 2
-ρ = 50
+ℓ = 0.1
+γ = 0.9
+ρ = 5
+∇_agreement_threshold = 0.4
 
 
 
@@ -143,14 +178,16 @@ maxIterations = 1e3
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
 #f(x) = Ackley(x)
-#f(x) = Rosenbrock(x, 2)
+f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
 #f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
-f(x) = Styblinski_Tang(x,n)
+#f(x) = Styblinski_Tang(x,n)
 
-@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, ρ, maxIterations)
-println(minimum)
+@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, γ, ρ, ∇_agreement_threshold, maxIterations)
+#println(minimum)
+
+
 
 if n == 2
     plotf(x,y) = f([x, y])
