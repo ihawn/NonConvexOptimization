@@ -54,6 +54,8 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 
     push!(finalSolX, _x[1])
     push!(finalSolY, _x[2])
+    push!(minsX, _x[1])
+    push!(minsY, _x[2])
 
     return _x, val
 end
@@ -133,7 +135,7 @@ function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_ran
 end
 
 
-function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
+function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh, x_range)
 
 
     static_count = 0
@@ -179,6 +181,12 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
         acceptance_rate = acceptance/(acceptance + rejection)
         _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, _γ, _ϕ, _ℓ, _ℓ_range,)
 
+        #throw out x values outside constraints
+        for i = 1:length(_x)
+            if _x[i] < x_range[i][1] || _x[i] > x_range[i][1]
+                _x = 2*(rand(n) .- 0.5) * 10.0
+            end
+        end
 
         println("\nIteration ", i)
         println("Step Acceptance Rate = ", 100*acceptance_rate, "%")
@@ -198,17 +206,18 @@ flush(stdout)
 
 n = 2
 x0 = 2*(rand(n) .- 0.5) * 10.0
+x_range = 2*(ones(n) .- 0.5) * 10
 ϵ = 1e-8
 η = 1e-5
 α = 0.5
 β = 0.8
 κ = 1
 ℓ = 1
-ℓ_range = (10, 50) #min should not exceed the smallest distance between convex regions
+ℓ_range = (1, 50) #min should not exceed the smallest distance between convex regions
 γ = 0.9
 ϕ = 0.0
 T = 1
-static_threshold = 5e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+static_threshold = 2e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.5
 
 
@@ -224,7 +233,7 @@ finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 5e4
+maxIterations = 2e4
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
@@ -236,11 +245,12 @@ maxIterations = 5e4
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
 #f(x) = Rosenbrock(x, n)
-f(x) = Easom(x)
+#f(x) = Easom(x)
 #f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
 #f(x) = Himmelblau(x)
 #f(x) = Levi(x)
+f(x) = Michalewicz(x, n)
 
 @time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
@@ -255,9 +265,9 @@ if n == 2
     p1 = Plots.contour(_x,_y, plotf, fill = true)
     plot(p1, legend = false, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping")
     scatter!(searchX, searchY, markersize = 2.5, color = "blue")
-    plot!(minsX, minsY, color = "white")
-    scatter!(minsX, minsY)
     scatter!(xPlot, yPlot, markersize = 2, color = "red")
     scatter!(solPlotX, solPlotY, color = "green", markersize = 2)
+    plot!(minsX, minsY, color = "white")
+    scatter!(minsX, minsY, color = "green")
     scatter!(finalSolX, finalSolY, color = "white")
 end

@@ -84,3 +84,14 @@ end
 function Three_Hump_Camel(x)
     return 2x[1]^2 - 1.05x[1]^4 + x[1]^6/6 + x[1]*x[2] + x[2]^2
 end
+
+
+function Michalewicz(x, n)
+    sum = 0
+
+    for i = 1:n
+        sum += sin(x[i]) * (sin(i*x[i]^2/pi))^20
+    end
+
+    return -sum
+end
