@@ -185,8 +185,8 @@ end
 
 flush(stdout)
 
-n = 2
-x0 = ones(n) * 3.0
+n = 20
+x0 = rand(n) * 10.0
 ϵ = 1e-8
 η = 1e-3
 α = 0.5
@@ -225,8 +225,8 @@ maxIterations = 1e4
 #f(x) = Rosenbrock(x, n)
 #f(x) = Easom(x)
 
-@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
-                            target_acc_rate, maxIterations, static_threshold)
+#@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+#                            target_acc_rate, maxIterations, static_threshold)
 
 if n == 2
     plotf(x,y) = f([x, y])
