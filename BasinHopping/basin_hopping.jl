@@ -17,7 +17,7 @@ end
 function Back_Line_Search(_x, _f, _fx, _∇f, _Δx, _α, _β, _κ)
     _t = _κ
 
-    while _f((_x + _t*_Δx)) > _fx + _α*_t*transpose(_∇f)*_Δx
+    while _f((_x + _t*_Δx)) > _fx + _α*_t*transpose(_∇f)*_Δx && _t > 1e-8
         _t *= _β
     end
 
@@ -59,10 +59,11 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 end
 
 
-function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
+function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
     it = 0;
     t = 1
     ∇f = Compute_Gradient(_f, _x)
+
     normGrad = norm(∇f)
 
     val = _f(_x)
@@ -70,7 +71,7 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
     push!(xPlot, _x[1])
     push!(yPlot, _x[2])
 
-    while normGrad > _ϵ
+    while normGrad > _ϵ && it < 1e2
         ∇f = Compute_Gradient(_f, _x)
         normGrad = norm(∇f)
 
@@ -81,6 +82,8 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ)
 
         push!(xPlot, _x[1])
         push!(yPlot, _x[2])
+
+        it+=1
     end
 
     push!(solPlotX, _x[1])
@@ -105,10 +108,10 @@ function Metropolis_Accept(val_new, val_old, _T)
 end
 
 
-function Monte_Carlo_Step(old_val, _f, _x, _ℓ, _η, _α, _β, _κ, _T)
+function Monte_Carlo_Step(old_val, _f, _x, _ℓ, _η, _α, _β, _κ, _T, maxIt)
 
     vec = Generate_ℓ_Vector(_x, _ℓ)
-    local_sol = Grad_Descent(_f, _x + vec, _α, _β, _η, _κ)
+    local_sol = Grad_Descent(_f, _x + vec, _α, _β, _η, _κ, maxIt)
     accept = Metropolis_Accept(local_sol[2], old_val, _T)
 
     push!(searchX, (local_sol[1] + vec)[1])
@@ -118,7 +121,7 @@ function Monte_Carlo_Step(old_val, _f, _x, _ℓ, _η, _α, _β, _κ, _T)
 end
 
 
-function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_range,)
+function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_range)
 
     if rate > target_rate + _ϕ #stuck in a local min so increase step length
         _ℓ = min(_ℓ_range[2], _ℓ/scale_factor)
@@ -132,17 +135,22 @@ end
 
 function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
 
-    println("Starting Basin Hopping")
 
     static_count = 0
     acceptance = 0
     rejection = 0
-    min_sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
+
+    println("Computing first solution")
+    min_sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
+    push!(minsX, _x[1])
+    push!(minsY, _x[2])
+
+    println("Starting Basin Hopping")
 
     for i = 1:maxIt
-        sol = Grad_Descent(_f, _x, _α, _β, _η, _κ)
+        sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
         val = sol[2]
-        accept = Monte_Carlo_Step(sol[2], _f, _x, _ℓ, _η, _α, _β, _κ, _T)
+        accept = Monte_Carlo_Step(sol[2], _f, _x, _ℓ, _η, _α, _β, _κ, _T, maxIt)
 
         if accept[1]
             _x = accept[2][1]
@@ -150,6 +158,9 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
 
             if val < min_sol[2] - _η
                 min_sol = accept[2]
+                push!(minsX, _x[1])
+                push!(minsY, _x[2])
+
                 static_count = 0
             else
                 static_count += 1
@@ -178,26 +189,26 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
 
     min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
 
-    println(min_sol)
+    println("\nFinal Solution: ",min_sol)
 
     return min_sol
 end
 
 flush(stdout)
 
-n = 25
-x0 = rand(n) * 10.0
+n = 2
+x0 = 2*(rand(n) .- 0.5) * 10.0
 ϵ = 1e-8
 η = 1e-5
 α = 0.5
 β = 0.8
 κ = 1
 ℓ = 1
-ℓ_range = (0.01, 25)
+ℓ_range = (10, 50) #min should not exceed the smallest distance between convex regions
 γ = 0.9
 ϕ = 0.0
-T = 10000
-static_threshold = 1e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+T = 1
+static_threshold = 5e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.5
 
 
@@ -207,11 +218,13 @@ solPlotX = []
 solPlotY = []
 searchX = []
 searchY = []
+minsX = []
+minsY = []
 finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 1e4
+maxIterations = 5e4
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
@@ -222,8 +235,12 @@ maxIterations = 1e4
 #f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
-f(x) = Rosenbrock(x, n)
-#f(x) = Easom(x)
+#f(x) = Rosenbrock(x, n)
+f(x) = Easom(x)
+#f(x) = Three_Hump_Camel(x)
+#f(x) = Matyas(x)
+#f(x) = Himmelblau(x)
+#f(x) = Levi(x)
 
 @time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
@@ -238,8 +255,9 @@ if n == 2
     p1 = Plots.contour(_x,_y, plotf, fill = true)
     plot(p1, legend = false, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping")
     scatter!(searchX, searchY, markersize = 2.5, color = "blue")
-    plot!(xPlot, yPlot, color = "white")
+    plot!(minsX, minsY, color = "white")
+    scatter!(minsX, minsY)
     scatter!(xPlot, yPlot, markersize = 2, color = "red")
-    scatter!(solPlotX, solPlotY, color = "green")
+    scatter!(solPlotX, solPlotY, color = "green", markersize = 2)
     scatter!(finalSolX, finalSolY, color = "white")
 end

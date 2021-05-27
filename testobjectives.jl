@@ -64,3 +64,23 @@ end
 function Easom(x)
     return -cos(x[1]) * cos(x[2]) * exp(-((x[1] - pi)^2 + (x[2] - pi)^2))
 end
+
+
+function Matyas(x)
+    return 0.26*(x[1]^2 + x[2]^2) - 0.48*x[1]*x[2]
+end
+
+
+function Levi(x)
+    return (sin(3pi*x[1]))^2 + (x[1] - 1)^2*(1 + (sin(3pi*x[2]))^2) + (x[2] - 1)^2*(1 + (sin(2pi*x[2]))^2)
+end
+
+
+function Himmelblau(x)
+    return (x[1]^2 + x[2] - 11)^2 + (x[1] + x[2]^2 - 7)^2
+end
+
+
+function Three_Hump_Camel(x)
+    return 2x[1]^2 - 1.05x[1]^4 + x[1]^6/6 + x[1]*x[2] + x[2]^2
+end

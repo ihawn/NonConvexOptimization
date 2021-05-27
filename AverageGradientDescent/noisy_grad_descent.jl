@@ -17,9 +17,11 @@ end
 
 function Back_Line_Search(_x, _f, _fx, _∇f, _Δx, _α, _β, _κ)
     _t = _κ
+    i = 0
 
-    while _f((_x + _t*_Δx)) > _fx + _α*_t*transpose(_∇f)*_Δx
+    while _f((_x + _t*_Δx)) > _fx + _α*_t*transpose(_∇f)*_Δx && i < 5e3
         _t *= _β
+        i+=1
     end
 
     return _t
@@ -106,10 +108,10 @@ function Dynamic_Mean_∇(_f, _x, _η, _ℓ, min_ℓ, _γ, _ρ, ∇_ag_thresh, m
 end
 
 
-function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _min_ℓ, _γ, _ρ, ∇_ag_thresh, maxIt)
+function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _min_ℓ, _γ, _ρ, ∇_ag_thresh, maxIt, good_enough)
     t = 1
     val = _f(_x)
-
+    same_sol = 0
 
     push!(xPlot, _x[1])
     push!(yPlot, _x[2])
@@ -121,6 +123,7 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _min_ℓ, _γ, 
         bls = Back_Line_Search(_x, _f, val, ∇f_ave, -∇f_ave, _α, _β, _κ)
         t = bls[1]
         _x -= t*∇f_ave
+        prev_val = val
         val = _f(_x)
 
         push!(xPlot, _x[1])
@@ -130,6 +133,17 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _min_ℓ, _γ, 
         println("\nIteration ", i)
         println("x = ", _x)
         println("f(x) = ", val)
+
+        if abs(prev_val - val) < _η
+
+            if same_sol >= good_enough
+                break
+            end
+
+            same_sol += 1
+        else
+            same_sol = 0
+        end
     end
 
 
@@ -138,6 +152,7 @@ function Ave_Grad_Descent(_f, _x, _α, _β, _ϵ, _η, _κ, _ℓ, _min_ℓ, _γ, 
 
     sol = Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 
+    println("\nFinal Solution: ", sol)
     return sol
 end
 
@@ -152,11 +167,12 @@ x0 = 2 * (rand(n) .- 0.5) * range
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 10
-min_ℓ = 1
-γ = 0.5
-ρ = 5
+ℓ = 2
+min_ℓ = 0.1
+γ = 0.8
+ρ = 50
 ∇_agreement_threshold = 0.5
+good_enough = 1e3
 
 
 
@@ -170,20 +186,21 @@ finalSolX = []
 finalSolY = []
 
 var = x0
-maxIterations = 1e3
+maxIterations = 5e3
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
-f(x) = Ackley(x)
+#f(x) = Ackley(x)
 #f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
-#f(x) = Bukin(x)
+f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
 #f(x) = Styblinski_Tang(x,n)
 
-@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, min_ℓ, γ, ρ, ∇_agreement_threshold, maxIterations)
+@time minimum = Ave_Grad_Descent(f, x0, α, β, ϵ, η, κ, ℓ, min_ℓ, γ, ρ,
+                                ∇_agreement_threshold, maxIterations, good_enough)
 #println(minimum)
 
 
