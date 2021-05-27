@@ -52,8 +52,7 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
         it+=1
     end
 
-    push!(finalSolX, _x[1])
-    push!(finalSolY, _x[2])
+
     push!(minsX, _x[1])
     push!(minsY, _x[2])
 
@@ -135,7 +134,7 @@ function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_ran
 end
 
 
-function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh, x_range)
+function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
 
 
     static_count = 0
@@ -181,12 +180,6 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
         acceptance_rate = acceptance/(acceptance + rejection)
         _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, _γ, _ϕ, _ℓ, _ℓ_range,)
 
-        #throw out x values outside constraints
-        for i = 1:length(_x)
-            if _x[i] < x_range[i][1] || _x[i] > x_range[i][1]
-                _x = 2*(rand(n) .- 0.5) * 10.0
-            end
-        end
 
         println("\nIteration ", i)
         println("Step Acceptance Rate = ", 100*acceptance_rate, "%")
@@ -197,28 +190,10 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
 
     min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
 
-    println("\nFinal Solution: ",min_sol)
+
 
     return min_sol
 end
-
-flush(stdout)
-
-n = 2
-x0 = 2*(rand(n) .- 0.5) * 10.0
-x_range = 2*(ones(n) .- 0.5) * 10
-ϵ = 1e-8
-η = 1e-5
-α = 0.5
-β = 0.8
-κ = 1
-ℓ = 1
-ℓ_range = (1, 50) #min should not exceed the smallest distance between convex regions
-γ = 0.9
-ϕ = 0.0
-T = 1
-static_threshold = 2e3 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
-target_acc_rate = 0.5
 
 
 xPlot = []
@@ -232,8 +207,23 @@ minsY = []
 finalSolX = []
 finalSolY = []
 
-var = x0
-maxIterations = 2e4
+flush(stdout)
+
+n = 2
+x0 = 2*(rand(n) .- 0.5) * 100.0
+ϵ = 1e-8
+η = 1e-5
+α = 0.5
+β = 0.8
+κ = 1
+ℓ = 1
+ℓ_range = (0.01, 5) #min should not exceed the smallest distance between convex regions
+γ = 0.9
+ϕ = 0.0
+T = 1
+static_threshold = 5e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+target_acc_rate = 0.6
+maxIterations = 2e3
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
@@ -246,19 +236,34 @@ maxIterations = 2e4
 #f(x) = Beale(x)
 #f(x) = Rosenbrock(x, n)
 #f(x) = Easom(x)
-#f(x) = Three_Hump_Camel(x)
+f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
 #f(x) = Himmelblau(x)
 #f(x) = Levi(x)
-f(x) = Michalewicz(x, n)
+#f(x) = Michalewicz(x, n)
 
-@time minimum = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+
+minSol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+                        target_acc_rate, maxIterations, static_threshold)
+for i = 1:10
+    sol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
+    if sol[2] < minSol[2]
+        minSol = sol
+    end
+
+    x0 = 2*(rand(n) .- 0.5) * 10.0
+end
+
+push!(finalSolX, minSol[1][1])
+push!(finalSolY, minSol[1][2])
+
+println("\nFinal Solution: ", minSol)
 
 if n == 2
     plotf(x,y) = f([x, y])
-    _x = -10.0:0.03:10.0
-    _y = -10.0:0.03:10.0
+    _x = -10.0:0.02:10.0
+    _y = -10.0:0.02:10.0
     X = repeat(reshape(_x, 1, :), length(_y), 1)
     Y = repeat(_y, 1, length(_x))
     Z = map(plotf, X, Y)
