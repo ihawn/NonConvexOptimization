@@ -195,7 +195,7 @@ maxIterations = 5e3
 #f(x) = Ackley(x)
 #f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
-f(x) = Bukin(x)
+#f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
 #f(x) = Styblinski_Tang(x,n)
 

@@ -210,28 +210,28 @@ finalSolY = []
 flush(stdout)
 
 n = 2
-x0 = 2*(rand(n) .- 0.5) * 100.0
+x0 = 2*(rand(n) .- 0.5) * 4
 ϵ = 1e-8
 η = 1e-5
 α = 0.5
 β = 0.8
 κ = 1
 ℓ = 1
-ℓ_range = (1, 5) #min should not exceed the smallest distance between convex regions
+ℓ_range = (0.1, 50)
 γ = 0.9
 ϕ = 0.0
-T = 1
+T = 0
 static_threshold = 5e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.6
 maxIterations = 2e3
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
-#f(x) = Rastrigin(x, n)
+f(x) = Rastrigin(x, n)
 #f(x) = Ackley(x)
 #f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
-f(x) = Schaffer_N2(x)
+#f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
 #f(x) = Rosenbrock(x, n)
@@ -245,7 +245,7 @@ f(x) = Schaffer_N2(x)
 
 minSol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                         target_acc_rate, maxIterations, static_threshold)
-for i = 1:10
+for i = 1:5
     sol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
     if sol[2] < minSol[2]
@@ -262,17 +262,19 @@ println("\nFinal Solution: ", minSol)
 
 if n == 2
     plotf(x,y) = f([x, y])
+    # _x = -50.0:0.2:50.0
+    # _y = -50.0:0.2:50.0
     _x = -10.0:0.02:10.0
     _y = -10.0:0.02:10.0
     X = repeat(reshape(_x, 1, :), length(_y), 1)
     Y = repeat(_y, 1, length(_x))
     Z = map(plotf, X, Y)
     p1 = Plots.contour(_x,_y, plotf, fill = true)
-    plot(p1, legend = false, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping")
-    scatter!(searchX, searchY, markersize = 2.5, color = "blue")
-    scatter!(xPlot, yPlot, markersize = 2, color = "red")
-    scatter!(solPlotX, solPlotY, color = "green", markersize = 2)
-    plot!(minsX, minsY, color = "white")
-    scatter!(minsX, minsY, color = "green")
-    scatter!(finalSolX, finalSolY, color = "white")
+    plot(p1, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
+    scatter!(searchX, searchY, markersize = 2.5, color = "blue", label = "Noise")
+    scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
+    scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
+    plot!(minsX, minsY, color = "white", label = "Descent Direction")
+    scatter!(minsX, minsY, color = "green", label = "Iterative Best Solutions")
+    scatter!(finalSolX, finalSolY, color = "white", label = "Final Solution")
 end
