@@ -160,18 +160,18 @@ flush(stdout)
 
 n = 2
 range = 10
-x0 = 2 * (rand(n) .- 0.5) * range
+x0 = [7, 7]
 ϵ = 1e-8
 η = 1e-3
 η = 1e-3
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 2
-min_ℓ = 0.1
+ℓ = 5
+min_ℓ = 1
 γ = 0.8
 ρ = 50
-∇_agreement_threshold = 0.5
+∇_agreement_threshold = 0.6
 good_enough = 1e3
 
 
@@ -192,7 +192,7 @@ maxIterations = 5e3
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = (3x[1] + 4x[2])^2 + x[1]^2*(1 - x[1])^2 + x[2]^2*(1 - x[2])^2
 #f(x) = Rastrigin(x, 2)
-#f(x) = Ackley(x)
+f(x) = Ackley(x)
 #f(x) = Rosenbrock(x, 2)
 #f(x) = Beale(x)
 #f(x) = Bukin(x)
