@@ -1,6 +1,7 @@
 using Plots
 using Calculus
 using LinearAlgebra
+using Distributions
 include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
 
 
@@ -134,8 +135,41 @@ function Adjust_Step_Length(target_rate, rate, scale_factor, _ϕ, _ℓ, _ℓ_ran
 end
 
 
-function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
+function SolutionSatisfiesBounds(_x, _minX, _maxX)
+    for i = 1:length(_x)
+        if _x[i] < _minX || _x[i] > _maxX
+            return false
+        end
+    end
 
+    return true
+end
+
+
+function MinFromRandomDistribution(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _κ, maxIt)
+    println(_x)
+    min_sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
+
+    for i = 1:numPoints
+        _x = rand(length(_x))*(abs(_maxX - _minX)) .+ _minX
+
+        push!(distNoiseX, _x[1])
+        push!(distNoiseY, _x[2])
+
+        sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
+
+        if SolutionSatisfiesBounds(sol[1], _minX, _maxX) && sol[2] < min_sol[2]
+            min_sol = sol
+        end
+    end
+
+    return  min_sol
+end
+
+
+function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _ϕ, _T, target_rate, maxIt, stat_thresh)
+
+    _x = MinFromRandomDistribution(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _κ, maxIt)[1]
 
     static_count = 0
     acceptance = 0
@@ -149,43 +183,54 @@ function Basin_Hopping(_f, _x, _α, _β, _η, _ϵ, _κ, _ℓ, _ℓ_range, _γ, _
     println("Starting Basin Hopping")
 
     for i = 1:maxIt
-        sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
-        val = sol[2]
-        accept = Monte_Carlo_Step(sol[2], _f, _x, _ℓ, _η, _α, _β, _κ, _T, maxIt)
 
-        if accept[1]
-            _x = accept[2][1]
-            val = accept[2][2]
+        println("\nIteration ", i)
 
-            if val < min_sol[2] - _η
-                min_sol = accept[2]
-                push!(minsX, _x[1])
-                push!(minsY, _x[2])
+        if SolutionSatisfiesBounds(_x, _minX, _maxX)
+            sol = Grad_Descent(_f, _x, _α, _β, _η, _κ, maxIt)
+            val = sol[2]
 
-                static_count = 0
+            accept = Monte_Carlo_Step(sol[2], _f, _x, _ℓ, _η, _α, _β, _κ, _T, maxIt)
+
+            if accept[1]
+                _x = accept[2][1]
+                val = accept[2][2]
+
+                if val < min_sol[2] - _η && SolutionSatisfiesBounds(_x, _minX, _maxX)
+                    min_sol = accept[2]
+                    push!(minsX, _x[1])
+                    push!(minsY, _x[2])
+
+                    static_count = 0
+                else
+                    static_count += 1
+                end
+
+                acceptance += 1
             else
+                rejection += 1
                 static_count += 1
             end
 
-            acceptance += 1
+            acceptance_rate = acceptance/(acceptance + rejection)
+            _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, _γ, _ϕ, _ℓ, _ℓ_range)
+
+
+            println("Step Acceptance Rate = ", 100*acceptance_rate, "%")
+            println("Step size = ", _ℓ)
+            println("x = ", _x)
+            println("Objective = ", val)
+
         else
-            rejection += 1
-            static_count += 1
+            println("Bounds Overstep: Restarting Solver")
+
+            _x = MinFromRandomDistribution(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _κ, maxIt)[1]
         end
+
 
         if static_count >= stat_thresh
             break
         end
-
-        acceptance_rate = acceptance/(acceptance + rejection)
-        _ℓ = Adjust_Step_Length(target_rate, acceptance_rate, _γ, _ϕ, _ℓ, _ℓ_range,)
-
-
-        println("\nIteration ", i)
-        println("Step Acceptance Rate = ", 100*acceptance_rate, "%")
-        println("Step size = ", _ℓ)
-        println("x = ", _x)
-        println("Objective = ", val)
     end
 
     min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
@@ -206,28 +251,33 @@ minsX = []
 minsY = []
 finalSolX = []
 finalSolY = []
+distNoiseX = []
+distNoiseY = []
 
 flush(stdout)
 
 n = 2
-x0 = 2*(rand(n) .- 0.5) * 4
+minX = -10
+maxX = 10
+rand_num_points = 5e2
+x0 = rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
 η = 1e-5
 α = 0.5
 β = 0.8
 κ = 1
-ℓ = 1
-ℓ_range = (0.1, 50)
+ℓ = 1.0
+ℓ_range = (5, abs(maxX - minX)/2.0)
 γ = 0.9
 ϕ = 0.0
-T = 0
-static_threshold = 5e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+T = 0.0
+static_threshold = 5e1 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.6
-maxIterations = 2e3
+maxIterations = 5e2
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
-f(x) = Rastrigin(x, n)
+#f(x) = Rastrigin(x, n)
 #f(x) = Ackley(x)
 #f(x) = Bukin(x)
 #f(x) = Holder_Table(x)
@@ -239,14 +289,15 @@ f(x) = Rastrigin(x, n)
 #f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
 #f(x) = Himmelblau(x)
-#f(x) = Levi(x)
+f(x) = Levi(x)
 #f(x) = Michalewicz(x, n)
 
 
-minSol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+
+minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                         target_acc_rate, maxIterations, static_threshold)
 for i = 1:5
-    sol = Basin_Hopping(f, x0, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+    sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
     if sol[2] < minSol[2]
         minSol = sol
@@ -262,19 +313,18 @@ println("\nFinal Solution: ", minSol)
 
 if n == 2
     plotf(x,y) = f([x, y])
-    # _x = -50.0:0.2:50.0
-    # _y = -50.0:0.2:50.0
-    _x = -10.0:0.02:10.0
-    _y = -10.0:0.02:10.0
+    _x = minX:0.005*abs(maxX - minX):maxX
+    _y = minX:0.005*abs(maxX - minX):maxX
     X = repeat(reshape(_x, 1, :), length(_y), 1)
     Y = repeat(_y, 1, length(_x))
     Z = map(plotf, X, Y)
     p1 = Plots.contour(_x,_y, plotf, fill = true)
-    plot(p1, xrange = (-10,10), yrange = (-10,10), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
+    plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
     scatter!(searchX, searchY, markersize = 2.5, color = "blue", label = "Noise")
-    scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
-    scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
-    plot!(minsX, minsY, color = "white", label = "Descent Direction")
+    #scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
+    #scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
+    #scatter!(distNoiseX, distNoiseY, color = "purple", markersize = 2, label = "Distribution noise")
+    plot!(minsX, minsY, color = "grey", label = "Descent Direction")
     scatter!(minsX, minsY, color = "green", label = "Iterative Best Solutions")
     scatter!(finalSolX, finalSolY, color = "white", label = "Final Solution")
 end
