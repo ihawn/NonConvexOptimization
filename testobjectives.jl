@@ -38,8 +38,11 @@ function Bukin(x)
     return 100*sqrt(abs(x[2] - 0.01x[1]^2)) + 0.01*abs(x[1] + 10.0)
 end
 
+function Bukin_Modified(x)
+    return sqrt(abs(x[2] - x[1]^2)) + abs(x[1])
+end
 
-#Not differentiable
+
 function Holder_Table(x)
     return -abs( sin(x[1])*cos(x[2]) * exp(abs(1 - sqrt(x[1]^2 + x[2]^2)/pi)))
 end

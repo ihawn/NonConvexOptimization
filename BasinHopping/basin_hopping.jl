@@ -8,6 +8,7 @@ include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/N
 function Compute_Gradient(_f, _x)
     return Calculus.gradient(g -> _f(g),_x)
 end
+#use Zygote
 
 
 function Compute_Hessian(_f, _x)
@@ -105,7 +106,7 @@ function Metropolis_Accept(val_new, val_old, _T)
     if val_new < val_old
         return true
     else
-        return rand() >= exp(min(0, (val_old - val_new)/_T))
+        return rand() <= exp(min(0, (val_old - val_new)/_T))
     end
 end
 
@@ -233,7 +234,7 @@ function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ,
         end
     end
 
-    min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
+#    min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
 
 
 
@@ -256,9 +257,9 @@ distNoiseY = []
 
 flush(stdout)
 
-n = 2
-minX = -10
-maxX = 10
+n = 10
+minX = 0
+maxX = pi
 rand_num_points = 5e2
 x0 = rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
@@ -270,7 +271,7 @@ x0 = rand(Uniform(minX, maxX), n)
 ℓ_range = (5, abs(maxX - minX)/2.0)
 γ = 0.9
 ϕ = 0.0
-T = 0.0
+T = 1
 static_threshold = 5e1 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.6
 maxIterations = 5e2
@@ -280,6 +281,7 @@ maxIterations = 5e2
 #f(x) = Rastrigin(x, n)
 #f(x) = Ackley(x)
 #f(x) = Bukin(x)
+#f(x) = Bukin_Modified(x)
 #f(x) = Holder_Table(x)
 #f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
@@ -289,14 +291,14 @@ maxIterations = 5e2
 #f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
 #f(x) = Himmelblau(x)
-f(x) = Levi(x)
-#f(x) = Michalewicz(x, n)
+#f(x) = Levi(x)
+f(x) = Michalewicz(x, n)
 
 
 
 minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                         target_acc_rate, maxIterations, static_threshold)
-for i = 1:5
+for i = 1:3
     sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
     if sol[2] < minSol[2]
@@ -318,12 +320,12 @@ if n == 2
     X = repeat(reshape(_x, 1, :), length(_y), 1)
     Y = repeat(_y, 1, length(_x))
     Z = map(plotf, X, Y)
-    p1 = Plots.contour(_x,_y, plotf, fill = true)
+    p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
     plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
     scatter!(searchX, searchY, markersize = 2.5, color = "blue", label = "Noise")
-    #scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
-    #scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
-    #scatter!(distNoiseX, distNoiseY, color = "purple", markersize = 2, label = "Distribution noise")
+    # scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
+    # scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
+    # scatter!(distNoiseX, distNoiseY, color = "purple", markersize = 2, label = "Distribution noise")
     plot!(minsX, minsY, color = "grey", label = "Descent Direction")
     scatter!(minsX, minsY, color = "green", label = "Iterative Best Solutions")
     scatter!(finalSolX, finalSolY, color = "white", label = "Final Solution")
