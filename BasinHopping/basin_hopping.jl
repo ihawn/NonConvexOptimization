@@ -5,10 +5,27 @@ using Distributions
 include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
 
 
+function One_Vec(n, pos)
+   vec = zeros(n)
+   vec[pos] = 1
+   return vec
+end
+
+#uses complex step differentiation
+function Compute_Gradient_Comp(_f, _x)
+   temp = zeros(length(_x))
+   _h = 1e-20
+   for i = 1:length(_x)
+      temp[i] = imag(_f(_x + im*_h*One_Vec(length(_x), i)))/_h
+   end
+
+   return temp
+end
+
+# uses finite differences
 function Compute_Gradient(_f, _x)
     return Calculus.gradient(g -> _f(g),_x)
 end
-#use Zygote
 
 
 function Compute_Hessian(_f, _x)
@@ -65,7 +82,7 @@ end
 function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
     it = 0;
     t = 1
-    ∇f = Compute_Gradient(_f, _x)
+    ∇f = Compute_Gradient_Comp(_f, _x)
 
     normGrad = norm(∇f)
 
@@ -75,7 +92,7 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
     push!(yPlot, _x[2])
 
     while normGrad > _ϵ && it < 1e2
-        ∇f = Compute_Gradient(_f, _x)
+        ∇f = Compute_Gradient_Comp(_f, _x)
         normGrad = norm(∇f)
 
         bls = Back_Line_Search(_x, _f, val, ∇f, -∇f, _α, _β, _κ)
@@ -234,7 +251,7 @@ function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ,
         end
     end
 
-#    min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
+    min_sol = Unconstrained_Newton(_f, min_sol[1], _α, _β, _κ, _ϵ, maxIt)
 
 
 
@@ -257,10 +274,10 @@ distNoiseY = []
 
 flush(stdout)
 
-n = 10
-minX = 0
-maxX = pi
-rand_num_points = 5e2
+n = 20
+minX = -5
+maxX = 5
+rand_num_points = 1e3
 x0 = rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
 η = 1e-5
@@ -268,11 +285,11 @@ x0 = rand(Uniform(minX, maxX), n)
 β = 0.8
 κ = 1
 ℓ = 1.0
-ℓ_range = (5, abs(maxX - minX)/2.0)
+ℓ_range = (1, abs(maxX - minX))
 γ = 0.9
 ϕ = 0.0
 T = 1
-static_threshold = 5e1 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+static_threshold = 1e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.6
 maxIterations = 5e2
 
@@ -286,19 +303,19 @@ maxIterations = 5e2
 #f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
-#f(x) = Rosenbrock(x, n)
+f(x) = Rosenbrock(x, n)
 #f(x) = Easom(x)
 #f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
 #f(x) = Himmelblau(x)
 #f(x) = Levi(x)
-f(x) = Michalewicz(x, n)
+#f(x) = Michalewicz(x, n)
 
 
 
 minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                         target_acc_rate, maxIterations, static_threshold)
-for i = 1:3
+for i = 1:9
     sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                             target_acc_rate, maxIterations, static_threshold)
     if sol[2] < minSol[2]
