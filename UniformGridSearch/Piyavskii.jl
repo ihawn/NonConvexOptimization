@@ -2,15 +2,15 @@ using Plots
 
 maxIt = 100
 
-f(x) = x^2 + sin(3x^2)
-L = 100000
+f(x) = sqrt(x^2 + 5) + sin(3x)
+L = 1
 
 ϵ = 1e-8
 
 #step 0
 k = 2
 a = -5.0
-b = 4.0
+b = 5.0
 x = []
 z = []
 P = []
@@ -45,7 +45,7 @@ for k = 2:100
 
     β = zLow[t]
     α = min(f(xLow), α)
-    println("x = ", α)
+    println(minimum(z))
 
     if abs(α - β) <= ϵ
         break
