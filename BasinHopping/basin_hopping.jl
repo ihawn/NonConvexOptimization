@@ -2,6 +2,7 @@ using Plots
 using Calculus
 using LinearAlgebra
 using Distributions
+using Zygote
 include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
 
 
@@ -14,7 +15,7 @@ end
 #uses complex step differentiation
 function Compute_Gradient_Comp(_f, _x)
    temp = zeros(length(_x))
-   _h = 1e-20
+   _h = 1e-8
    for i = 1:length(_x)
       temp[i] = imag(_f(_x + im*_h*One_Vec(length(_x), i)))/_h
    end
@@ -29,7 +30,16 @@ end
 
 
 function Compute_Hessian(_f, _x)
-    return hessian(h -> _f(h),_x)
+    return Calculus.hessian(h -> _f(h),_x)
+end
+
+
+function Zygote_Grad(_f, _x)
+    return _f'(_x)
+end
+
+function Zygote_Hess(_f, _x)
+    return Zygote.hessian(_f, _x)
 end
 
 
@@ -62,8 +72,8 @@ function Unconstrained_Newton(_f, _x, _α, _β, _κ, _ϵ, maxIt)
 
     while λ2 > _ϵ && it <= maxIt
         val = _f(_x)
-        ∇f = Compute_Gradient(_f, _x)
-        ∇2f = Compute_Hessian(_f, _x)
+        ∇f = Zygote_Grad(_f, _x)
+        ∇2f = Zygote_Hess(_f, _x)
         Δxnt = Newton_Step(∇f, ∇2f, _x)
         λ2 = Newton_Decrement(∇2f, Δxnt)
         t = Back_Line_Search(_x, _f, val, ∇f, Δxnt, _α, _β, _κ)
@@ -82,7 +92,7 @@ end
 function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
     it = 0;
     t = 1
-    ∇f = Compute_Gradient_Comp(_f, _x)
+    ∇f = Zygote_Grad(_f, _x)
 
     normGrad = norm(∇f)
 
@@ -92,7 +102,7 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
     push!(yPlot, _x[2])
 
     while normGrad > _ϵ && it < 1e2
-        ∇f = Compute_Gradient_Comp(_f, _x)
+        ∇f = Zygote_Grad(_f, _x)
         normGrad = norm(∇f)
 
         bls = Back_Line_Search(_x, _f, val, ∇f, -∇f, _α, _β, _κ)
@@ -275,12 +285,12 @@ distNoiseY = []
 flush(stdout)
 
 n = 20
-minX = -5
-maxX = 5
+minX = -10
+maxX = 10
 rand_num_points = 1e3
 x0 = rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
-η = 1e-5
+η = 1e-4
 α = 0.5
 β = 0.8
 κ = 1
