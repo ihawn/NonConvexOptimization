@@ -1,58 +1,63 @@
 using Plots
 
-maxIt = 100
+function IntPoint(f, x1, x2, L)
+    intX = (f(x1) - f(x2))/(2L) + (x1 + x2)/2
+    return intX, f(intX), f(x1) + L*(intX - x1), f(intX)
+end
 
-f(x) = sqrt(x^2 + 5) + sin(3x)
-L = 1
+# f(x) = -sqrt(x^2 + 5) - sin(3x)
+# L = 4
+
+f(x) = 12x^3*exp(-x^4) + 20x*exp(-2x^2) - x^2
+L = 20
 
 ϵ = 1e-8
+a = -4.0
+b = 4.0
 
-#step 0
-k = 2
-a = -5.0
-b = 5.0
-x = []
-z = []
-P = []
-zLow = []
-append!(x, a)
-append!(x, b)
-append!(z, f(xi) for xi in x)
+X = []
+append!(X, a)
+append!(X, (a+b)/2)
+append!(X, b)
 
-α = minimum(z)
-β = (z[1] + z[2])/2 - L*(x[2] - x[1])/2
+F = []
+append!(F, f(X[1]))
+append!(F, f(X[2]))
+append!(F, f(X[3]))
 
-for k = 2:100
-    #step 1
-    xLow = []
-    zLow = []
-    P = []
+plotX = []
+plotY = []
 
-    append!(zLow, (z[i] + z[i+1])/2 - L*(x[i+1] - x[i])/2 for i = 1:k-1)
+for k = 1:100
+    maxPos = argmax(F)
+    maxX = X[maxPos]
 
-    #step 2
-    append!(P, -z[i] for i = 1:k-1)
+    sawPoint = IntPoint(f, X[maxPos - 1], X[maxPos + 1], L)
 
-    #step 3
-    t = argmax(P)
+    append!(X, sawPoint[1])
+    append!(F, sawPoint[2])
 
-    #step 4
-    xLow = (x[t] + x[t+1])/2 + (z[t] - z[t+1])/(2L)
-    append!(x, xLow)
-    append!(z, f(xLow))
+    p = sortperm(X); X .= X[p]; F .= F[p]
 
-    p = sortperm(x); x .= x[p]; z .= z[p]
+    append!(plotX, sawPoint[1])
+    append!(plotY, sawPoint[3])
 
-    β = zLow[t]
-    α = min(f(xLow), α)
-    println(minimum(z))
+    α = sawPoint[2]
+    β = (f(X[maxPos - 1]) + f(X[maxPos]))/2 - L*(X[maxPos] - X[maxPos-1])/2
+
+    println("\nIteration ", k)
+    println("x = ", sawPoint[1])
+    println("f(x) = ", sawPoint[2])
 
     if abs(α - β) <= ϵ
         break
     end
 end
 
+append!(plotX, X)
+append!(plotY, F)
+p = sortperm(plotX); plotX .= plotX[p]; plotY .= plotY[p]
 
 plot(f, a, b)
-scatter!(x,z)
-plot!(x,z)
+plot!(plotX, plotY)
+scatter!(X, F)
