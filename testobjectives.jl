@@ -98,3 +98,9 @@ function Michalewicz(x, n)
 
     return -sum
 end
+
+function GP(x)
+    a = (1 + (x[1] + x[2] + 1)^2*(19 - 14x[1] + 3x[1]^2 - 14x[2] + 6x[1]*x[2] + 3x[2]^2))
+    b = (30 + (2x[1] - 3x[2])^2*(18 - 32x[1] + 12x[1]^2 + 48x[2] - 36x[1]*x[2] + 27x[2]^2))
+    return a*b
+end

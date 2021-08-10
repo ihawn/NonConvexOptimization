@@ -284,9 +284,9 @@ distNoiseY = []
 
 flush(stdout)
 
-n = 20
-minX = -10
-maxX = 10
+n = 2
+minX = -100
+maxX = 100
 rand_num_points = 1e3
 x0 = rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
@@ -310,10 +310,10 @@ maxIterations = 5e2
 #f(x) = Bukin(x)
 #f(x) = Bukin_Modified(x)
 #f(x) = Holder_Table(x)
-#f(x) = Schaffer_N2(x)
+f(x) = Schaffer_N2(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
-f(x) = Rosenbrock(x, n)
+#f(x) = Rosenbrock(x, n)
 #f(x) = Easom(x)
 #f(x) = Three_Hump_Camel(x)
 #f(x) = Matyas(x)
