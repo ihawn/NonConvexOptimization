@@ -74,12 +74,13 @@ for c = 1:maxIt
     _m = 0.5m*(1 + (_M/m)^2)
     δ = (-(u - v) + up*Δ + 0.5*_m*Δ^2)/(_m*Δ + (up - vp))
     R = v + vp*δ - 0.5*_m*δ^2
+    R = Δ + (z_list[i] - z_list[i])^2 / (m^2*ρ_list[i]) - 2*(z_list[i] + z_list[i-1])/m
     append!(R_list, R)
     append!(δ_list, δ)
 
 
     #Find the hypercube D with minimal R
-    minI = findmin(R_list)[2]
+    minI = findmax(R_list)[2]
     minD = D_list[minI]
 
 

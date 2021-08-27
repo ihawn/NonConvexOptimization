@@ -1,4 +1,5 @@
 using Plots
+using Symbolics
 
 function SubdivideInterval(_interval, n)
     x_list = zeros(n + 1)
@@ -30,7 +31,7 @@ function Compute_ρ(x_list)
     n = length(x_list)
     ρ_list = zeros(n-1)
     for i = 2:n
-        ρ_list[i-1] = (x_list[i] - x_list[i-1])^(1/length(x_list[i]))
+        ρ_list[i-1] = (x_list[i] - x_list[i-1])
     end
 
     return ρ_list
@@ -59,7 +60,7 @@ function Compute_charList(z_list, ρ_list, m)
         if i == 1
             R_list[i] = 2*ρ_list[i] - 4*z_list[i]/m
         elseif i < n
-            R_list[i] = ρ_list[i] + (z_list[i] - z_list[i])^2 / (m^2*ρ_list[i]) - 2*(z_list[i] + z_list[i-1])/m
+            R_list[i] = ρ_list[i] + (z_list[i] - z_list[i-1])^2 / (m^2*ρ_list[i]) - 2*(z_list[i] + z_list[i-1])/m
         else
             R_list[i] = 2*ρ_list[i-1] - 4*z_list[i-1]/m
         end
@@ -71,7 +72,7 @@ end
 
 function ArgMaxExcludeFirstAndLast(lst)
     _max = -Inf
-    _loc = 0
+    _loc = 2
     for i = 2:length(lst) - 1
         if lst[i] > _max
             _max= lst[i]
@@ -83,13 +84,8 @@ end
 
 
 function DetermineMaxChar(R_list, x_list)
-
     t = ArgMaxExcludeFirstAndLast(R_list)
-    if t == 1
-        return x_list[t], x_list[t + 1], t
-    else
-        return x_list[t - 1], x_list[t], t
-    end
+    return x_list[t - 1], x_list[t], t
 end
 
 
@@ -122,10 +118,16 @@ function PerformTrials(_f, _𝚇, _z, _t, _r, _m, _k)
 end
 
 
-function Solve_F(_f, inter, _r, _ϵ, maxIt)
+function Solve_F(_f, inter, _r, _ϵ, maxIt, start)
     minY = Inf
     minX = Inf
-    for k = 2:maxIt
+    solLoc = 0
+    startInter = inter
+
+    for k = start:maxIt
+        append!(interval_list, inter[1])
+        append!(interval_list, inter[2])
+
         𝚇 = SubdivideInterval(inter, k)
         z = Compute_z(_f, 𝚇)
         ρ = Compute_ρ(𝚇)
@@ -134,55 +136,64 @@ function Solve_F(_f, inter, _r, _ϵ, maxIt)
         𝑿 = DetermineMaxChar(R, 𝚇)
         t = 𝑿[3]
         x = Compute_x(𝚇, z, t, _r, m)
+        diff = 0 #max(x - 𝑿[1], 𝑿[2] - x)
+        inter = [𝑿[1] - diff, 𝑿[2] + diff]
         f = _f(x)
+        solLoc = k
 
         if f < minY
             minY = f
             minX = x
         end
-
+        println(t)
+        println("Interval: ", inter)
 
         append!(x_plot, x)
         append!(y_plot, _f(x))
 
-        if t > 1
-            println()
-            println("x: ", x)
-            println("ρ: ", ρ[t - 1])
-        end
-
-        if t > 1 && ρ[t-1] < _ϵ
+        if ρ[t-1] < _ϵ
             break
         end
     end
 
-    println("\nSolution: ")
+    println("\nSolution found at iteration ", solLoc - start)
     println("x = ", minX)
     println("f = ", minY)
+
+    return minY
 end
 
-f(x) = (x - 0.5)^2 + 0.03*sin(20x)
-interval = [0, 1]
-r = 10000
-ϵ = 1e-8
-maxIterations = 100
+#f(x) = 0.0001x^2 + sin(20x)
+#f(x) = -(x + sin(x))*exp(-x^2)
+#f(x) = -(1.4 - 3x)*sin(18x)
+#f(x) = -sum(k*cos((k + 1)*x + k) for k = 1:5)
+#f(x) = -exp(-x)*sin(2*pi*x)
+#f(x) = (x^2 - 5x + 6)/(x^2 + 1)
+#f(x) = exp(-3x) - (sin(x))^3
+f(x) = x^2
+
+interval = [-1.0, 10.1]
+#interval = [-10.0, 10.0]
+#interval = [0.0, 1.2]
+#interval = [-10.0, 1.0]
+#interval = [0.0, 4.0]
+#interval = [-5.0, 5.0]
+#interval = [0.0, 20.0]
+#interval = [-1.0, 1.0]
+
+r = 1.1
+ϵ = 1e-16
+maxIterations = 20
+startIteration = 15
 x_plot = []
 y_plot = []
+interval_list = []
 
-Solve_F(f, interval, r, ϵ, maxIterations)
+# fp(_t) = -abs(substitute(D, t => _t))
 
-plot(f, 0,1, label = "f")
+Solve_F(f, interval, r, ϵ, maxIterations, startIteration)
+
+
+plot(f, interval[1],interval[2], label = "f", title = "Gergel's Minimization Algorithm in 1D")
 scatter!(x_plot, y_plot, label = "f(x)")
-
-
-𝚇 = SubdivideInterval(interval, 2)
-z = Compute_z(f, 𝚇)
-ρ = Compute_ρ(𝚇)
-m = Compute_holder(𝚇, z, r, ρ)
-R = Compute_charList(z, ρ, m)
-𝑿 = DetermineMaxChar(R, 𝚇)
-t = 𝑿[3]
-x = Compute_x(𝚇, z, t, r, m)
-println()
-println(𝑿[1])
-println(𝑿[2])
+plot!(interval_list, seriestype = :vline, label = "Intervals")
