@@ -1,7 +1,7 @@
 using Zygote
 using LinearAlgebra
 using Plots
-include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
+include("/home/ihawn/NonConvexOptimiztion/testobjectivs.jl")
 
 
 #Assumptions: f is differentiable and has Lipschitz first derivative
