@@ -207,5 +207,5 @@ hline!([p[1]], color=:purple, linestyle=:dash)
 
 
 
-# plot(p[6], label = "α")
-# plot!(p[7], label = "β")
+plot(p[6], label = "α")
+plot!(p[7], label = "β")
