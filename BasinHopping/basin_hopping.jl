@@ -3,7 +3,7 @@ using Calculus
 using LinearAlgebra
 using Distributions
 using Zygote
-include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
+include("testobjectives.jl")
 
 
 function One_Vec(n, pos)
@@ -306,12 +306,12 @@ maxIterations = 5e2
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = Rastrigin(x, n)
-#f(x) = Ackley(x)
+f(x) = Ackley(x)
 #f(x) = Bukin(x)
 #f(x) = Bukin_Modified(x)
 #f(x) = Holder_Table(x)
 #f(x) = Schaffer_N2(x)
-f(x) = GP(x)
+#f(x) = GP(x)
 #f(x) = Styblinski_Tang(x,n)
 #f(x) = Beale(x)
 #f(x) = Rosenbrock(x, n)
@@ -326,15 +326,16 @@ f(x) = GP(x)
 
 minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
                         target_acc_rate, maxIterations, static_threshold)
-for i = 1:9
-    sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
-                            target_acc_rate, maxIterations, static_threshold)
-    if sol[2] < minSol[2]
-        minSol = sol
-    end
-
-    x0 = 2*(rand(n) .- 0.5) * 10.0
-end
+# for i = 1:9
+#     x0 = 2*(rand(n) .- 0.5) * 10.0
+#     sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+#                             target_acc_rate, maxIterations, static_threshold)
+#     if sol[2] < minSol[2]
+#         minSol = sol
+#     end
+#
+#
+# end
 
 push!(finalSolX, minSol[1][1])
 push!(finalSolY, minSol[1][2])
