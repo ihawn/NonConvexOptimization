@@ -104,5 +104,5 @@ plot(f, a, b, ylims = (-15,15), xlims = (a, b), legend = false)
 plot!(p[4][:], p[5][:], color=:green)
 scatter!(p[2], p[3])
 
-# plot(p[6], label = "α")
-# plot!(p[7], label = "β")
+plot(p[6], label = "α")
+plot!(p[7], label = "β")
