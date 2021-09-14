@@ -206,6 +206,6 @@ scatter!(p[2], p[3], markersize=3, color =:orange)
 hline!([p[1]], color=:purple, linestyle=:dash)
 
 
-
-plot(p[6], label = "α")
-plot!(p[7], label = "β")
+# 
+# plot(p[6], label = "α")
+# plot!(p[7], label = "β")
