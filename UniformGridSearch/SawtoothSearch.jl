@@ -64,7 +64,7 @@ a, b = -8.0, 8.0
 
 ϵ = 1e-8
 
-x, y, x_list, y_list, α_list, β_list = Piyavskii(f, a, b, L, ϵ, 2)
+x, y, x_list, y_list, α_list, β_list = Piyavskii(f, a, b, L, ϵ, 2000)
 
 p=plot(f, xlims = (a, b), dpi = 200, legend = false, title = "Piyavskii's Algorithm: i=1")
 plot!(x_list, y_list)
