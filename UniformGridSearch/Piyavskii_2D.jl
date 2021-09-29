@@ -1,44 +1,61 @@
-include("Piyavskii.jl")
+using Plots
+using LinearAlgebra
+include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
 
-f(_x) = -0.03*(_x[1]^2 + _x[2]^2) + 4*sin(0.1*_x[1]*_x[2]) + cos(x[1] - 3)
-L = 3.97
-ϵ = 1e-8
-a = [-8.0, 0.0]
-b = [8.0, 0.0]
-x = sum([a, b])/2
-plot_x = []
-plot_y = []
+#ax + by + cz + d = 0
+struct Hyperplane
+    a::Float64
+    b::Float64
+    c::Float64
+    d::Float64
+end
 
-_f(_x) = _x[1] + _x[2]
+struct Pyramid
+    planes::Array{Hyperplane,1}
+end
 
-for i = 1:10
-    #fix x
-    p = 0
-    if i%2 == 1
-        _f(_x) = f([x[1], _x])
-        p = PiyavskiiSolve(_f, L, a[2], b[2], ϵ, 100)
-        println(p)
-        x[2] = p[1]
+function GenerateHyperplane(x)
+    n = nullspace([x ones(length(x[:,1]))])
+    return Hyperplane(n[1], n[2], n[3], n[4])
+end
+
+function GeneratePyramid(fx, x, L)
+    offset = 1
+    base = [[x[1]+offset, x[2]+offset, fx-L],
+            [x[1]-offset, x[2]+offset, fx-L],
+            [x[1]+offset, x[2]-offset, fx-L],
+            [x[1]-offset, x[2]-offset, fx-L]]
+
+    h = []
+    for i in 1:4
+        n = 1
+        if i == 4
+            offset = -3
+        end
+        x = [base[i] base[i+offset] [x[1], x[2], fx]]'
+        push!(h, GenerateHyperplane(x))
     end
-
-    #fix y
-    if i%2 == 0
-        _f(_x) = f([_x, x[2]])
-        p = PiyavskiiSolve(_f, L, a[1], b[1], ϵ, 100)
-        x[1] = p[1]
-    end
-
-    append!(plot_x, x[1])
-    append!(plot_y, x[2])
+    return Pyramid(h);
 end
 
 
+f(x) = x[1]^2 + x[2]^2
+minX = -5
+maxX = 5
+xBounds = [-4, 3]
+yBounds = [-4, 3.5]
+
+x = [xBounds[2], yBounds[2]]
+p1 = GeneratePyramid(f(x), x, 8)
+
+
+
 plotf(x,y) = f([x, y])
-_x = -10:0.1:10
-_y = -10:0.1:10
+_x = minX:0.005*abs(maxX - minX):maxX
+_y = minX:0.005*abs(maxX - minX):maxX
 X = repeat(reshape(_x, 1, :), length(_y), 1)
 Y = repeat(_y, 1, length(_x))
 Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
-plot(p1, xrange = (-10, 10), yrange = (-10, 10))
-scatter!(plot_x, plot_y, color = :green)
+plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), legendfontsize = 4, dpi = 400, legend = false)
+scatter!(xBounds, yBounds, color=:green)
