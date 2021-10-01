@@ -66,7 +66,7 @@ a, b = -8.0, 8.0
 
 x, y, x_list, y_list, α_list, β_list = Piyavskii(f, a, b, L, ϵ, 2000)
 
-p=plot(f, xlims = (a, b), dpi = 200, legend = false, title = "Piyavskii's Algorithm: i=1")
+p=plot(f, xlims = (a, b), dpi = 200, legend = false)
 plot!(x_list, y_list)
 scatter!([x], [y])
 # show(p)

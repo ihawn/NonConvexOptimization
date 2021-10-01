@@ -1,6 +1,6 @@
 using Plots
 using LinearAlgebra
-include("C:/Users/Isaac/Documents/Optimization/NonConvex/NonConvexOptimization/NonConvexOptimiztion/testobjectives.jl")
+
 
 #ax + by + cz + d = 0
 struct Hyperplane
@@ -38,6 +38,9 @@ function GeneratePyramid(fx, x, L)
     return Pyramid(h);
 end
 
+function GetIntersections(p1, p2, p3)
+    
+end
 
 f(x) = x[1]^2 + x[2]^2
 minX = -5
