@@ -10,9 +10,6 @@ struct Hyperplane
     d::Float64
 end
 
-struct Pyramid
-    planes::Array{Hyperplane,1}
-end
 
 function GenerateHyperplane(x)
     n = nullspace([x ones(length(x[:,1]))])
@@ -35,22 +32,39 @@ function GeneratePyramid(fx, x, L)
         x = [base[i] base[i+offset] [x[1], x[2], fx]]'
         push!(h, GenerateHyperplane(x))
     end
-    return Pyramid(h);
+    return h;
+end
+
+function IntersectFromHyperplane(h1, h2, h3)
+    return [h1.a h1.b h1.c; h2.a h2.b h2.c; h3.a h3.b h3.c]\[-h1.d; -h2.d; -h3.d]
 end
 
 function GetIntersections(p1, p2, p3)
-    
+    points = []
+    for i = 1:4
+        for j = 1:4
+            for k = 1:4
+                if i != j && i != k && j != k
+                    append!(points, IntersectFromHyperplane(p1[i], p2[j], p3[k]))
+                end
+            end
+        end
+    end
+
+    return points
 end
 
 f(x) = x[1]^2 + x[2]^2
 minX = -5
 maxX = 5
-xBounds = [-4, 3]
-yBounds = [-4, 3.5]
+xBounds = [-2, 2]
+yBounds = [-2, 2]
 
-x = [xBounds[2], yBounds[2]]
-p1 = GeneratePyramid(f(x), x, 8)
-
+x = [[xBounds[1], yBounds[1]], [xBounds[1], yBounds[2]], [xBounds[2], yBounds[1]], [xBounds[2], yBounds[2]]]
+p1 = GeneratePyramid(f(x[1]), x[1], 8)
+p2 = GeneratePyramid(f(x[2]), x[2], 8)
+p3 = GeneratePyramid(f(x[3]), x[3], 8)
+ints = GetIntersections(p1, p2, p3)
 
 
 plotf(x,y) = f([x, y])
@@ -62,3 +76,4 @@ Z = map(plotf, X, Y)
 p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
 plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), legendfontsize = 4, dpi = 400, legend = false)
 scatter!(xBounds, yBounds, color=:green)
+scatter!(ints)
