@@ -128,6 +128,7 @@ function GetIntersections(p1, p2, p3, points, prev_min)
                 A = [p1[i].a p1[i].b p1[i].c; p2[j].a p2[j].b p2[j].c; p3[k].a p3[k].b p3[k].c]
                 if abs(det(A)) > 1e-8 #find a better way of doing this
                     p = IntersectFromHyperplane(p1[i], p2[j], p3[k])
+                    @show A
                     if p[3] >= prev_min
                         push!(points, p)
                     end
@@ -157,7 +158,7 @@ minX = -5
 maxX = 5
 xBounds = [-2, 1]
 yBounds = [-2, 1]
-L = 8
+L = 4
 
 x = [[xBounds[1], yBounds[1]], [xBounds[1], yBounds[2]], [xBounds[2], yBounds[1]], [xBounds[2], yBounds[2]]]
 pyr_list = []
@@ -171,13 +172,12 @@ for i in 1:length(x)
 end
 
 
-o = IntersectPyramids(pyr_list, pyr_list[1], pyr_list[2], pyr_list[3], L)
-
-# #compute first intersections
-# int_list = GetIntersections(pyr_list[1], pyr_list[2], pyr_list[3], int_list, -Inf)
-# int_list = GetIntersections(pyr_list[1], pyr_list[2], pyr_list[4], int_list, -Inf)
-# int_list = GetIntersections(pyr_list[1], pyr_list[3], pyr_list[4], int_list, -Inf)
-# int_list = GetIntersections(pyr_list[2], pyr_list[3], pyr_list[4], int_list, -Inf)
+#o = IntersectPyramids(pyr_list, pyr_list[1], pyr_list[2], pyr_list[3], L)
+#compute first intersections
+int_list = GetIntersections(pyr_list[1], pyr_list[2], pyr_list[3], int_list, -Inf)
+int_list = GetIntersections(pyr_list[1], pyr_list[2], pyr_list[4], int_list, -Inf)
+int_list = GetIntersections(pyr_list[1], pyr_list[3], pyr_list[4], int_list, -Inf)
+int_list = GetIntersections(pyr_list[2], pyr_list[3], pyr_list[4], int_list, -Inf)
 
 # pl = []
 # for i in 1:10
