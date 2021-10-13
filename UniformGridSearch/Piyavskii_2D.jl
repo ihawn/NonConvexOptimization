@@ -2,6 +2,8 @@ using Plots
 using LinearAlgebra
 using Combinatorics
 using Profile
+using Calculus
+include("test_objectives.jl")
 
 
 #ax + by + cz + d = 0
@@ -12,9 +14,10 @@ struct Hyperplane
     d::Float64
 end
 
-struct Pyramid
+mutable struct Pyramid
     planes::Vector{Hyperplane}
     peak::Vector{Float64}
+    closed::Bool
 end
 
 struct Point
@@ -23,12 +26,8 @@ struct Point
     z::Float64
 end
 
-
-function HyperEval(p, h::Hyperplane)
-    x = p[1:2]
-    z = (h.a*x[1] + h.b*x[2] + h.d)/-h.c
-
-    return p[3] - z < 1e-12
+function Compute_Gradient(_f, _x)
+    return Calculus.gradient(g -> _f(g),_x)
 end
 
 function GenerateHyperplane(x)
@@ -52,7 +51,7 @@ function GeneratePyramid(fx, x, L)
         n = [base[i] base[i+offset] [x[1], x[2], fx]]'
         push!(h, GenerateHyperplane(n))
     end
-    return Pyramid(h, [x[1], x[2], fx]);
+    return Pyramid(h, [x[1], x[2], fx], false);
 end
 
 function MinZ(lst)
@@ -67,28 +66,8 @@ function MinZ(lst)
     return lst[min_pos], min_pos
 end
 
-
 function IntersectFromHyperplane(h1, h2, h3)
     return [h1.a h1.b h1.c; h2.a h2.b h2.c; h3.a h3.b h3.c]\[-h1.d; -h2.d; -h3.d]
-end
-
-function GetIntersections(p1, p2, p3, points, prev_min)
-    for i = 1:4
-        for j = 1:4
-            for k = 1:4
-                A = [p1.planes[i].a p1.planes[i].b p1.planes[i].c; p2.planes[j].a p2.planes[j].b p2.planes[j].c; p3.planes[k].a p3.planes[k].b p3.planes[k].c]
-                if abs(det(A)) > 1e-8 #find a better way of doing this
-                    p = IntersectFromHyperplane(p1.planes[i], p2.planes[j], p3.planes[k])
- 
-                    if p[3] >= prev_min
-                        push!(points, p)
-                    end
-                end
-            end
-        end
-    end
-
-    return points
 end
 
 function AddIntersections!(int_lst, c1, c2, c3, L)
@@ -128,7 +107,7 @@ function AddIntersections!(int_lst, c1, c2, c3, L)
 end
 
 #check if under one of the pyramids in the x_list
-function FilterIntersections!(int_lst, pyr_lst)
+function FilterIntersections!(int_lst, pyr_lst, L)
     i = 0 
     s = length(int_lst)
     del = Int64[]
@@ -146,23 +125,20 @@ function FilterIntersections!(int_lst, pyr_lst)
     deleteat!(int_lst, del)
 end
 
-
 function IntersectPyramids!(int_lst, pyr_lst, c1, c2, c3, L)
-
     AddIntersections!(int_lst, c1, c2, c3, L)
-    FilterIntersections!(int_lst, pyr_lst)
-
-    return int_lst
+    #FilterIntersections!(int_lst, pyr_lst, L)
 end
 
 function ConeSearch()
 
-    f(x) = x[1]^2 + x[2]^2
-    minX = -5
-    maxX = 5
-    xBounds = [-1.8, 1.2]
-    yBounds = [-2, 1.1]
-    L = 4
+    plot_x = Float64[]
+    plot_y = Float64[]
+
+    f(x) = Styblinski_Tang(x, 2)
+    xBounds = [-3.8, 3.9]
+    yBounds = [-3.6, 3.95]
+    L = 86
     
     x = [[xBounds[1], yBounds[1]], [xBounds[1], yBounds[2]], [xBounds[2], yBounds[1]], [xBounds[2], yBounds[2]]]
     pyr_list = []
@@ -179,49 +155,72 @@ function ConeSearch()
         IntersectPyramids!(sect_list, pyr_list, _c[1], _c[2], _c[3], L)
     end
 
-    minf = f([xBounds[1], yBounds[1]])
-    for i in 1:30
 
+    minf = f([xBounds[1], yBounds[1]])
+    push!(plot_x, xBounds[1])
+    push!(plot_y, yBounds[1])
+    for i in 1:100
         m_pt, m_pos = MinZ(sect_list)
         fx = f(m_pt[1:2])
+
         if fx < minf
             minf = fx
+            push!(plot_x, m_pt[1])
+            push!(plot_y, m_pt[2])
         end
-        push!(pyr_list, GeneratePyramid(fx, m_pt[1:2], L))
         deleteat!(sect_list, m_pos)
+        
+        push!(pyr_list, GeneratePyramid(fx, m_pt[1:2], L))
 
         c2 = combinations(pyr_list, 3)
         @show length(c2)
         for _c in c2
-            IntersectPyramids!(sect_list, pyr_list, _c[1], _c[2], _c[3], L)
+            if !_c[1].closed || !_c[2].closed || !_c[3].closed #Check to make sure this combo of cones hasn't been accounted for
+                IntersectPyramids!(sect_list, pyr_list, _c[1], _c[2], _c[3], L)
+                _c[1].closed = true
+                _c[2].closed = true
+                _c[3].closed = true
+            end
         end
 
         println()
-        @show m_pt[3]
+        @show m_pt
+        @show fx
         @show minf
-        @show minf - m_pt[3]
         @show length(pyr_list)
         @show length(sect_list)
     end
+
+    return plot_x, plot_y, sect_list
 end
 
-ConeSearch()
+@time plot_x, plot_y, sect_list = ConeSearch()
 # @profile ConeSearch()
+minX = -4
+maxX = 4
+f(x) = Styblinski_Tang(x, 2)
 
-# plotf(x,y) = f([x, y])
-# _x = minX:0.005*abs(maxX - minX):maxX
-# _y = minX:0.005*abs(maxX - minX):maxX
-# X = repeat(reshape(_x, 1, :), length(_y), 1)
-# Y = repeat(_y, 1, length(_x))
-# Z = map(plotf, X, Y)
-# p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
-# plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), legendfontsize = 4, dpi = 400, legend = false)
-# #scatter!(xBounds, yBounds, color=:green)
-
-# x_plot = []
-# y_plot = []
-# for i in 1:length(pl)
-#     append!(x_plot, pl[i][1])
-#     append!(y_plot, pl[i][2])
+# max_g = 0
+# for t in 1:1e7
+#     x = [rand()*(3.9+3.8)-3.8, rand()*(3.6+3.95)-3.6]
+#     ∇f = Compute_Gradient(f, x)
+#     nr = norm(∇f, 2)
+#     if nr > max_g
+#         global max_g = nr
+#     end
 # end
-# scatter!(x_plot, y_plot)
+# @show max_g
+
+plotf(x,y) = f([x, y])
+_x = minX:0.005*abs(maxX - minX):maxX
+_y = minX:0.005*abs(maxX - minX):maxX
+X = repeat(reshape(_x, 1, :), length(_y), 1)
+Y = repeat(_y, 1, length(_x))
+Z = map(plotf, X, Y)
+p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
+plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), legendfontsize = 4, dpi = 400, legend = false)
+@show plot_x
+@show plot_y
+plot!(plot_x, plot_y, color=:green)
+scatter!(plot_x, plot_y, color=:green)
+scatter!(sect_list[:][1], sect_list[:][2], color=:red)
