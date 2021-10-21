@@ -68,6 +68,7 @@ public class Intersections : MonoBehaviour
 
         return Mathf.Abs(pt.y - t1) <= 0.00001f &&
                Mathf.Abs(pt.y - t2) <= 0.00001f &&
-               Mathf.Abs(pt.y - t3) <= 0.00001f;
+               Mathf.Abs(pt.y - t3) <= 0.00001f &&
+               Vector3.Magnitude(pt) < 100000;
     }
 }
