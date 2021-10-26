@@ -5,6 +5,8 @@ using MathNet.Numerics.LinearAlgebra;
 
 public class PyramidHandler : MonoBehaviour
 {
+    public GameManager gm;
+
     public Hyperplane GenerateHyperplane(float[,] x, int parID, int direction)
     {
         var M = Matrix<double>.Build;
@@ -20,6 +22,8 @@ public class PyramidHandler : MonoBehaviour
 
     public Pyramid GeneratePyramid(Vector3 peak, float L, int id)
     {
+        peak.y = gm.Objective(peak.x, peak.z);
+
         float[,] x1 = new float[,]
         {
             { peak.x + 1, peak.y - L, peak.z + 1 },
@@ -54,6 +58,23 @@ public class PyramidHandler : MonoBehaviour
         };
 
         return new Pyramid(id, peak, L, hyps);
+    }
+
+    public List<Pyramid[]> CombinePyramids(List<Pyramid> pyrList)
+    {
+        List<Pyramid[]> combos = new List<Pyramid[]>();
+
+        for (int i = 0; i < pyrList.Count; i++)
+        {
+            for(int j = i+1; j < pyrList.Count; j++)
+            {
+                for(int k = j+1; k < pyrList.Count; k++)
+                {
+                    combos.Add(new Pyramid[] { pyrList[i], pyrList[j], pyrList[k] });
+                }
+            }
+        }
+        return combos;
     }
 }
 

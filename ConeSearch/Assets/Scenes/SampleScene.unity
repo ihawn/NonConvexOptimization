@@ -291,7 +291,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19b48d735d4f02340a6bd0cc06b6e941, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pHandler: {fileID: 0}
+  pHandler: {fileID: 1639782054}
+  gm: {fileID: 1671223621}
 --- !u!4 &796655584
 Transform:
   m_ObjectHideFlags: 0
@@ -418,6 +419,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c15f1b570ec8c56409086b5c776fabfe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gm: {fileID: 1671223621}
 --- !u!4 &1639782055
 Transform:
   m_ObjectHideFlags: 0
@@ -465,6 +467,13 @@ MonoBehaviour:
   mg: {fileID: 796655583}
   dg: {fileID: 654078544}
   ih: {fileID: 1920970639}
+  intersections: []
+  pointContainer: {fileID: 0}
+  L: 4
+  maxIterations: 200
+  pyramidCount: 0
+  lowerBound: -100000
+  upperBound: 100000
 --- !u!4 &1671223622
 Transform:
   m_ObjectHideFlags: 0
