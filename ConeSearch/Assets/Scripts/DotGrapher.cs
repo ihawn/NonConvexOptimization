@@ -31,10 +31,8 @@ public class DotGrapher : MonoBehaviour
         }
     }
 
-    public void GraphPoint(Vector3 v, float dotScale, Color col)
+    public GameObject GraphPoint(GameObject pt, Vector3 v, float dotScale, Color col)
     {
-        GameObject pt = new GameObject();
-        pt.name = "Point";
         GameObject g = Instantiate(dot, v, Quaternion.identity);
         g.transform.localScale = Vector3.one * dotScale;
 
@@ -42,5 +40,7 @@ public class DotGrapher : MonoBehaviour
         dotRenderer.material.SetColor("_Color", col);
 
         g.transform.parent = pt.transform;
+
+        return pt;
     }
 }

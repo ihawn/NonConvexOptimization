@@ -1,0 +1,14 @@
+﻿{
+  "supports": {},
+  "dependencies": {
+    "StyleCop.Analyzers": "1.0.0",
+    "System.Collections": "4.0.11",
+    "System.Diagnostics.Tools": "4.0.1",
+    "System.Resources.ResourceManager": "4.0.1",
+    "System.Runtime": "4.1.0",
+    "System.Runtime.InteropServices": "4.1.0"
+  },
+  "frameworks": {
+    "netstandard1.1": {}
+  }
+}

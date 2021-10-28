@@ -5,10 +5,12 @@ using UnityEngine;
 public class MGrapher : MonoBehaviour
 {
     public PyramidHandler pHandler;
+    public GameManager gm;
 
     public void GeneratePyramidMesh(Pyramid p)
     {
         Vector3 peak = p.peak;
+        peak.y = gm.Objective(peak.x, peak.z);
         float L = p.L;
 
         Vector3[] pts = new Vector3[]
@@ -49,5 +51,9 @@ public class MGrapher : MonoBehaviour
         mf.mesh = mesh;
         mesh.RecalculateNormals();
         mesh.Optimize();
+
+        //Random color for each pyramid
+        Color col = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        mr.material.SetColor("_Color", col);
     }
 }
