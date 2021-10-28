@@ -6,6 +6,7 @@ using MathNet.Numerics.LinearAlgebra;
 public class PyramidHandler : MonoBehaviour
 {
     public GameManager gm;
+    public DotGrapher dg;
 
     public Hyperplane GenerateHyperplane(float[,] x, int parID, int direction)
     {

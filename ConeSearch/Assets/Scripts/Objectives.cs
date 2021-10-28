@@ -13,4 +13,9 @@ public static class Objectives
     {
         return 20 + Mathf.Pow(x, 2) - 10 * Mathf.Cos(2 * Mathf.PI * x) + Mathf.Pow(z, 2) - 10 * Mathf.Cos(2 * Mathf.PI * z);
     }
+
+    public static float QuadSine(float x, float y)
+    {
+        return 0.05f * (x * x + y * y) + 0.5f * Mathf.Sin((x - 1) * y);
+    }
 }

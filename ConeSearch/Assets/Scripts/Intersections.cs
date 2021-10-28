@@ -39,18 +39,24 @@ public class Intersections : MonoBehaviour
         return intPoints;
     }
 
-    public List<Vector3> IntersectNew(List<Hyperplane> lst, List<Pyramid> pyrLst, List<Vector3> sectList, Pyramid pyr)
+    public List<Vector3> IntersectNew(List<Hyperplane> lst, List<Pyramid> pyrLst, List<Vector3> sectList, Pyramid pyr, float dst)
     {
-        for(int i = 0; i < lst.Count; i++)
+        for (int i = 0; i < lst.Count; i++)
         {
-            for(int j = i+1; j < lst.Count; j++)
+            for (int j = i + 1; j < lst.Count; j++)
             {
-                if(lst[i].direction != lst[j].direction)
+                if (lst[i].direction != lst[j].direction &&
+                    Vector2.Distance(new Vector2(pyrLst[lst[i].parentID].peak.x, pyrLst[lst[i].parentID].peak.y),
+                                     new Vector2(pyrLst[lst[j].parentID].peak.x, pyrLst[lst[j].parentID].peak.y)) <= dst)
                 {
                     for (int k = 0; k < pyr.hyperplanes.Length; k++)
                     {
                         if (lst[j].direction != pyr.hyperplanes[k].direction &&
-                            lst[i].direction != pyr.hyperplanes[k].direction)
+                            lst[i].direction != pyr.hyperplanes[k].direction &&
+                            Vector2.Distance(new Vector2(pyrLst[lst[i].parentID].peak.x, pyrLst[lst[i].parentID].peak.y),
+                                             new Vector2(pyr.peak.x, pyr.peak.y)) <= dst &&
+                            Vector2.Distance(new Vector2(pyrLst[lst[j].parentID].peak.x, pyrLst[lst[j].parentID].peak.y),
+                                             new Vector2(pyr.peak.x, pyr.peak.y)) <= dst)
                         {
                             Vector3 pt = IntersectHyperplanes(lst[i], lst[j], pyr.hyperplanes[k]);
 
@@ -60,12 +66,28 @@ public class Intersections : MonoBehaviour
                     }
                 }
             }
+
+            //Two hyperplanes from new pyramid
+            int offset = 1;
+            for (int k = 0; k < pyr.hyperplanes.Length; k++)
+            {
+                if (k == 3)
+                    offset = -3;
+                if (lst[i].direction != pyr.hyperplanes[k].direction &&
+                    lst[i].direction != pyr.hyperplanes[k+offset].direction)
+                {
+                    Vector3 pt = IntersectHyperplanes(lst[i], pyr.hyperplanes[k], pyr.hyperplanes[k + offset]);
+
+                    if (ValidIntersection(pyrLst[lst[i].parentID], pyr, pyr, pt))
+                        sectList.Add(pt);
+                }
+            }
         }
 
         return sectList;
     }
 
-    Vector3 IntersectHyperplanes(Hyperplane h1, Hyperplane h2, Hyperplane h3)
+    public Vector3 IntersectHyperplanes(Hyperplane h1, Hyperplane h2, Hyperplane h3)
     {
         var A = Matrix<double>.Build.DenseOfArray(new double[,]
         {
@@ -80,16 +102,16 @@ public class Intersections : MonoBehaviour
     }
 
     //Checks whether an intersection is on p1, p2, and p3 or not
-    bool ValidIntersection(Pyramid p1, Pyramid p2, Pyramid p3, Vector3 pt)
+    public bool ValidIntersection(Pyramid p1, Pyramid p2, Pyramid p3, Vector3 pt)
     {
         // y - L||x - hatx||
         float t1 = p1.peak.y - p1.L * Mathf.Max(Mathf.Abs(pt.x - p1.peak.x), Mathf.Abs(pt.z - p1.peak.z));
         float t2 = p2.peak.y - p2.L * Mathf.Max(Mathf.Abs(pt.x - p2.peak.x), Mathf.Abs(pt.z - p2.peak.z));
         float t3 = p3.peak.y - p3.L * Mathf.Max(Mathf.Abs(pt.x - p3.peak.x), Mathf.Abs(pt.z - p3.peak.z));
 
-        return Mathf.Abs(pt.y - t1) <= 0.0000001f &&
-               Mathf.Abs(pt.y - t2) <= 0.0000001f &&
-               Mathf.Abs(pt.y - t3) <= 0.0000001f &&
+        return Mathf.Abs(pt.y - t1) <= 0.00001f &&
+               Mathf.Abs(pt.y - t2) <= 0.00001f &&
+               Mathf.Abs(pt.y - t3) <= 0.00001f &&
                Vector3.Magnitude(pt) < 100000;
     }
 
@@ -105,7 +127,7 @@ public class Intersections : MonoBehaviour
             {
                 float t = pyrs[i].peak.y - pyrs[i].L * Mathf.Max(Mathf.Abs(sects[j].x - pyrs[i].peak.x), Mathf.Abs(sects[j].z - pyrs[i].peak.z));
                 
-                if(t > sects[j].y + 0.000001f)
+                if(t > sects[j].y + 0.0001f)
                 {
                     sects.RemoveAt(j);
                     s--;

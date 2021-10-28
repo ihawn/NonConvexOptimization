@@ -420,6 +420,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gm: {fileID: 1671223621}
+  dg: {fileID: 654078544}
 --- !u!4 &1639782055
 Transform:
   m_ObjectHideFlags: 0
@@ -470,8 +471,10 @@ MonoBehaviour:
   intersections: []
   pointContainer: {fileID: 0}
   L: 4
-  maxIterations: 200
+  considerationDistance: 10
+  maxIterations: 50
   pyramidCount: 0
+  hyperplaneCount: 0
   lowerBound: -100000
   upperBound: 100000
 --- !u!4 &1671223622

@@ -13,10 +13,14 @@ public class GameManager : MonoBehaviour
     public List<Vector3> intersections;
     public List<Hyperplane> hyperplanes;
     public List<Pyramid> pyramids;
+    
+
     public GameObject pointContainer;
     public float L = 3;
+    public float considerationDistance = 1f;
     public int maxIterations = 5;
     public int pyramidCount = 0;
+    public int hyperplaneCount = 0;
 
     public float lowerBound = -100000, upperBound = 100000;
 
@@ -26,7 +30,7 @@ public class GameManager : MonoBehaviour
 
         pointContainer = new GameObject();
         hyperplanes = new List<Hyperplane>();
-
+        
 
         Pyramid pyr1 = ph.GeneratePyramid(new Vector3(-0.8f, 0, -0.6f), L, 0);
         Pyramid pyr2 = ph.GeneratePyramid(new Vector3(-0.8f, 0, 0.95f), L, 1);
@@ -51,13 +55,26 @@ public class GameManager : MonoBehaviour
         }
 
         //Add hyperplanes to list
-        for(int i = 0; i < pyramids.Count; i++)
+        for (int i = 0; i < pyramids.Count; i++)
         {
             for(int j = 0; j < pyramids[i].hyperplanes.Length; j++)
             {
                 hyperplanes.Add(pyramids[i].hyperplanes[j]);
-            }
+
+                intersections.AddRange(ih.IntersectNew(hyperplanes, pyramids, intersections, pyramids[i], considerationDistance));
+                intersections = intersections.Distinct().ToList();
+                ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
+            }    
         }
+
+
+        //Draw the intersections
+        for (int i = 0; i < intersections.Count; i++)
+        {
+            dg.GraphPoint(pointContainer, intersections[i], 0.03f, Color.red);
+        }
+
+        dg.GraphPoint(pointContainer, Vector3.zero, 0.015f, Color.blue); //Solution
     }
 
     void Update()
@@ -69,7 +86,7 @@ public class GameManager : MonoBehaviour
             float fx = Objective(s.x, s.z);
             Pyramid pyr = ph.GeneratePyramid(new Vector3(s.x, fx, s.z), L, pyramids.Count); //Generate new pyramid
             mg.GeneratePyramidMesh(pyr); //Draw the pyramid mesh
-            
+
 
             if (s.y > lowerBound)
                 lowerBound = s.y;
@@ -77,18 +94,10 @@ public class GameManager : MonoBehaviour
                 upperBound = fx;
 
 
-            //Combinations of pyramids intersecting
-            /*combos = ph.CombinePyramids(pyramids);
-            intersections = new List<Vector3>();
-            for (int i = 0; i < combos.Count; i++)
-            {
-                intersections.AddRange(ih.IntersectPyramids(combos[i][0], combos[i][1], combos[i][2])); //Combine the lists
-            }*/
+            intersections = ih.IntersectNew(hyperplanes, pyramids, intersections, pyr, considerationDistance);
 
-            intersections.AddRange(ih.IntersectNew(hyperplanes, pyramids, intersections, pyr));
-            intersections = intersections.Distinct().ToList();
+
             pyramids.Add(pyr); //Add new pyramid to list
-
             //Add new pyramid's hyperplanes to list
             for (int j = 0; j < pyr.hyperplanes.Length; j++)
             {
@@ -97,7 +106,8 @@ public class GameManager : MonoBehaviour
 
             ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
 
-            //Remove past intersections
+
+            //Remove past intersection dots
             Destroy(pointContainer);
             pointContainer = new GameObject();
             pointContainer.name = "Points";
@@ -114,6 +124,9 @@ public class GameManager : MonoBehaviour
             print("Upper Bound: " + upperBound);
 
             pyramidCount = pyramids.Count;
+            hyperplaneCount = hyperplanes.Count;
+
+            //considerationDistance = Mathf.Abs(upperBound - lowerBound) / 4f;
         }
 
     }
@@ -137,6 +150,6 @@ public class GameManager : MonoBehaviour
 
     public float Objective(float x, float z)
     {
-        return x * x + z * z;// Objectives.Rastrigin(x, z);
+        return Objectives.QuadSine(x, z);
     }
 }
