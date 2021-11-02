@@ -7,13 +7,15 @@ public class Pyramid
     public int id;
     public Vector3 peak;
     public float L;
+    public float dist; //distance to another pyramid in question
     public Hyperplane[] hyperplanes;
 
-    public Pyramid(int id, Vector3 peak, float L, Hyperplane[] hyperplanes)
+    public Pyramid(int id, Vector3 peak, float L, float dist, Hyperplane[] hyperplanes)
     {
         this.id = id;
         this.peak = peak;
         this.L = L;
+        this.dist = dist;
         this.hyperplanes = hyperplanes;
     }
 
@@ -22,6 +24,7 @@ public class Pyramid
         this.id = pyramid.id;
         this.peak = pyramid.peak;
         this.L = pyramid.L;
+        this.dist = pyramid.dist;
         this.hyperplanes = pyramid.hyperplanes;
     }
 }

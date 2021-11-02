@@ -7,9 +7,9 @@ public class Hyperplane
 {
     public int parentID;
     public int direction; //0-3
-    public Vector<double> coeff;
+    public Vector<float> coeff;
 
-    public Hyperplane(int parentID, int direction, Vector<double> coeff)
+    public Hyperplane(int parentID, int direction, Vector<float> coeff)
     {
         this.parentID = parentID;
         this.direction = direction;

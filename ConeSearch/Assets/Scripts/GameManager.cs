@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using System;
 
 public class GameManager : MonoBehaviour
 {
@@ -17,10 +18,12 @@ public class GameManager : MonoBehaviour
 
     public GameObject pointContainer;
     public float L = 3;
-    public float considerationDistance = 1f;
+    public float bounds = 4f;
+    public int closenessThreshold = 8;
     public int maxIterations = 5;
     public int pyramidCount = 0;
     public int hyperplaneCount = 0;
+
 
     public float lowerBound = -100000, upperBound = 100000;
 
@@ -30,12 +33,12 @@ public class GameManager : MonoBehaviour
 
         pointContainer = new GameObject();
         hyperplanes = new List<Hyperplane>();
-        
 
-        Pyramid pyr1 = ph.GeneratePyramid(new Vector3(-0.8f, 0, -0.6f), L, 0);
-        Pyramid pyr2 = ph.GeneratePyramid(new Vector3(-0.8f, 0, 0.95f), L, 1);
-        Pyramid pyr3 = ph.GeneratePyramid(new Vector3(0.9f, 0, -0.6f), L, 2);
-        Pyramid pyr4 = ph.GeneratePyramid(new Vector3(0.9f, 0, 0.95f), L, 3);
+
+        Pyramid pyr1 = ph.GeneratePyramid(new Vector3(-bounds, 0, -bounds), L, 0);
+        Pyramid pyr2 = ph.GeneratePyramid(new Vector3(-bounds, 0, bounds), L, 1);
+        Pyramid pyr3 = ph.GeneratePyramid(new Vector3(bounds, 0, -bounds), L, 2);
+        Pyramid pyr4 = ph.GeneratePyramid(new Vector3(bounds, 0, bounds), L, 3);
 
         pyramids = new List<Pyramid> { pyr1, pyr2, pyr3, pyr4 }; //List init
 
@@ -61,7 +64,7 @@ public class GameManager : MonoBehaviour
             {
                 hyperplanes.Add(pyramids[i].hyperplanes[j]);
 
-                intersections.AddRange(ih.IntersectNew(hyperplanes, pyramids, intersections, pyramids[i], considerationDistance));
+                intersections.AddRange(ih.IntersectNew(hyperplanes, pyramids, pyramids[i]));
                 intersections = intersections.Distinct().ToList();
                 ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
             }    
@@ -94,7 +97,8 @@ public class GameManager : MonoBehaviour
                 upperBound = fx;
 
 
-            intersections = ih.IntersectNew(hyperplanes, pyramids, intersections, pyr, considerationDistance);
+            List<Hyperplane> closeHyps = GetAdjHyperplanes(pyramids, pyr, closenessThreshold);
+            List<Vector3> newIntersections = ih.IntersectNew(/*hyperplanes*/closeHyps, pyramids, pyr);
 
 
             pyramids.Add(pyr); //Add new pyramid to list
@@ -104,7 +108,11 @@ public class GameManager : MonoBehaviour
                 hyperplanes.Add(pyr.hyperplanes[j]);
             }
 
-            ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
+            //intersections.AddRange(newIntersections);
+             //intersections = ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
+            newIntersections = ih.PruneIntersections(newIntersections, pyramids);
+            intersections = ih.PruneIntersections(intersections, new List<Pyramid> { pyr });
+            intersections.AddRange(newIntersections);
 
 
             //Remove past intersection dots
@@ -125,8 +133,6 @@ public class GameManager : MonoBehaviour
 
             pyramidCount = pyramids.Count;
             hyperplaneCount = hyperplanes.Count;
-
-            //considerationDistance = Mathf.Abs(upperBound - lowerBound) / 4f;
         }
 
     }
@@ -146,6 +152,28 @@ public class GameManager : MonoBehaviour
         }
 
         return minPos;
+    }
+
+    List<Hyperplane> GetAdjHyperplanes(List<Pyramid> pyrs, Pyramid pyr, int adjSize)
+    {
+        List<Hyperplane> adj = new List<Hyperplane>();
+
+        for(int i = 0; i < pyrs.Count; i++)
+        {
+            pyrs[i].dist = Mathf.Max(Mathf.Abs(pyrs[i].peak.x - pyr.peak.x), Mathf.Abs(pyrs[i].peak.z - pyr.peak.z));
+                //Vector2.Distance(new Vector2(pyrs[i].peak.x, pyrs[i].peak.z), new Vector2(pyr.peak.x, pyr.peak.z));
+        }
+
+        pyrs = pyrs.OrderBy(x => x.dist).ToList();
+        for(int i = 0; i < Mathf.Min(adjSize, pyrs.Count); i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                adj.Add(pyrs[i].hyperplanes[j]);
+            }           
+        }
+
+        return adj;
     }
 
     public float Objective(float x, float z)

@@ -16,6 +16,6 @@ public static class Objectives
 
     public static float QuadSine(float x, float y)
     {
-        return 0.05f * (x * x + y * y) + 0.5f * Mathf.Sin((x - 1) * y);
+        return x * x + y * y + 2 * Mathf.Sin((x - 2) * y);
     }
 }

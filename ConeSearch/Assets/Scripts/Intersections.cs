@@ -39,24 +39,20 @@ public class Intersections : MonoBehaviour
         return intPoints;
     }
 
-    public List<Vector3> IntersectNew(List<Hyperplane> lst, List<Pyramid> pyrLst, List<Vector3> sectList, Pyramid pyr, float dst)
+    public List<Vector3> IntersectNew(List<Hyperplane> lst, List<Pyramid> pyrLst, Pyramid pyr)
     {
+        List<Vector3> sectList = new List<Vector3>();
+
         for (int i = 0; i < lst.Count; i++)
         {
             for (int j = i + 1; j < lst.Count; j++)
             {
-                if (lst[i].direction != lst[j].direction &&
-                    Vector2.Distance(new Vector2(pyrLst[lst[i].parentID].peak.x, pyrLst[lst[i].parentID].peak.y),
-                                     new Vector2(pyrLst[lst[j].parentID].peak.x, pyrLst[lst[j].parentID].peak.y)) <= dst)
+                if (lst[i].direction != lst[j].direction)
                 {
                     for (int k = 0; k < pyr.hyperplanes.Length; k++)
                     {
                         if (lst[j].direction != pyr.hyperplanes[k].direction &&
-                            lst[i].direction != pyr.hyperplanes[k].direction &&
-                            Vector2.Distance(new Vector2(pyrLst[lst[i].parentID].peak.x, pyrLst[lst[i].parentID].peak.y),
-                                             new Vector2(pyr.peak.x, pyr.peak.y)) <= dst &&
-                            Vector2.Distance(new Vector2(pyrLst[lst[j].parentID].peak.x, pyrLst[lst[j].parentID].peak.y),
-                                             new Vector2(pyr.peak.x, pyr.peak.y)) <= dst)
+                            lst[i].direction != pyr.hyperplanes[k].direction)
                         {
                             Vector3 pt = IntersectHyperplanes(lst[i], lst[j], pyr.hyperplanes[k]);
 
@@ -89,16 +85,16 @@ public class Intersections : MonoBehaviour
 
     public Vector3 IntersectHyperplanes(Hyperplane h1, Hyperplane h2, Hyperplane h3)
     {
-        var A = Matrix<double>.Build.DenseOfArray(new double[,]
+        var A = Matrix<float>.Build.DenseOfArray(new float[,]
         {
             { h1.coeff[0], h1.coeff[1], h1.coeff[2] },
             { h2.coeff[0], h2.coeff[1], h2.coeff[2] },
             { h3.coeff[0], h3.coeff[1], h3.coeff[2] },
         });
-        var b = Vector<double>.Build.Dense(new double[] { -h1.coeff[3], -h2.coeff[3], -h3.coeff[3] });
+        var b = Vector<float>.Build.Dense(new float[] { -h1.coeff[3], -h2.coeff[3], -h3.coeff[3] });
         var x = A.Solve(b);
 
-        return new Vector3((float) x[0], (float) x[1], (float) x[2]);
+        return new Vector3(x[0], x[1], x[2]);
     }
 
     //Checks whether an intersection is on p1, p2, and p3 or not

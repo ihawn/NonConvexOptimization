@@ -470,9 +470,10 @@ MonoBehaviour:
   ih: {fileID: 1920970639}
   intersections: []
   pointContainer: {fileID: 0}
-  L: 4
-  considerationDistance: 10
-  maxIterations: 50
+  L: 7
+  bounds: 0.8
+  closenessThreshold: 10
+  maxIterations: 150
   pyramidCount: 0
   hyperplaneCount: 0
   lowerBound: -100000

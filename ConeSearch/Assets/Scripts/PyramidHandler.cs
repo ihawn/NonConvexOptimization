@@ -10,12 +10,12 @@ public class PyramidHandler : MonoBehaviour
 
     public Hyperplane GenerateHyperplane(float[,] x, int parID, int direction)
     {
-        var M = Matrix<double>.Build;
-        var V = Vector<double>.Build;
-        var m = M.DenseOfArray(new[,] { { x[0,0],  x[0,1], x[0,2], 1.0 },
-                                        { x[1,0],  x[1,1], x[1,2], 1.0 },
-                                        { x[2,0],  x[2,1], x[2,2], 1.0 } });
-        Vector<double>[] k = m.Kernel();
+        var M = Matrix<float>.Build;
+        var V = Vector<float>.Build;
+        var m = M.DenseOfArray(new[,] { { x[0,0],  x[0,1], x[0,2], 1.0f },
+                                        { x[1,0],  x[1,1], x[1,2], 1.0f },
+                                        { x[2,0],  x[2,1], x[2,2], 1.0f } });
+        Vector<float>[] k = m.Kernel();
         var nullspace = V.DenseOfArray(new[] { k[0][0], k[0][1], k[0][2], k[0][3] });
 
         return new Hyperplane(parID, direction, nullspace);
@@ -58,7 +58,7 @@ public class PyramidHandler : MonoBehaviour
             GenerateHyperplane(x4, id, 3)
         };
 
-        return new Pyramid(id, peak, L, hyps);
+        return new Pyramid(id, peak, L, 0, hyps);
     }
 
     public List<Pyramid[]> CombinePyramids(List<Pyramid> pyrList)
