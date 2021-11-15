@@ -1,0 +1,6 @@
+mod structs;
+
+fn main()
+{
+
+}
