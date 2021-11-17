@@ -55,7 +55,7 @@ end
 # a, b = -8.0, 8.0
 
 f(x) = sqrt(x^2 + 5) + sin(3x)
-L = 4.0
+L = 4
 a, b = -8.0, 8.0
 
 # f(x) = x^2
@@ -64,7 +64,7 @@ a, b = -8.0, 8.0
 
 ϵ = 1e-8
 
-x, y, x_list, y_list, α_list, β_list = Piyavskii(f, a, b, L, ϵ, 2000)
+x, y, x_list, y_list, α_list, β_list = Piyavskii(f, a, b, L, ϵ, 500)
 
 p=plot(f, xlims = (a, b), dpi = 200, legend = false)
 plot!(x_list, y_list)
