@@ -176,7 +176,7 @@ function ConeSearch()
     ##
     ##LOOP START
     ##
-    for i in 1:20
+    for i in 1:3
         m_pt, m_pos = MinZ(sect_list)
         fx = f(m_pt[1:2])
 
@@ -187,7 +187,7 @@ function ConeSearch()
         end
 
         r = length(sect_list)
-        y = 0
+        y = 1
         while y < r
             if norm(sect_list[y] - m_pt, 2) <= 1e-10
                 deleteat!(sect_list, y)
@@ -252,7 +252,7 @@ function ConeSearch()
         @show length(sect_list)
        # @show length(all_groups)
         @show blacklist
-        #@show sect_list
+        @show sect_list
     end
 
     pks_x = [pyr_list[1].peak[1]]
