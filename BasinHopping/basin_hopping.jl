@@ -3,8 +3,12 @@ using Calculus
 using LinearAlgebra
 using Distributions
 using Zygote
+using CSV
+using BenchmarkTools
+using DataFrames
 include("testobjectives.jl")
 
+global minZ = Inf
 
 function One_Vec(n, pos)
    vec = zeros(n)
@@ -116,8 +120,14 @@ function Grad_Descent(_f, _x, _α, _β, _ϵ, _κ, maxIt)
         it+=1
     end
 
-    push!(solPlotX, _x[1])
-    push!(solPlotY, _x[2])
+    if val < minZ
+        global minZ = val
+        push!(solPlotX, _x[1])
+        push!(solPlotY, _x[2])
+        append!(timings, abs(time() - now))
+        append!(normDif, minZ)
+        global now = time()
+    end
 
     return _x, val
 end
@@ -209,6 +219,7 @@ function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ,
     push!(minsY, _x[2])
 
     println("Starting Basin Hopping")
+    global now = time()
 
     for i = 1:maxIt
 
@@ -248,13 +259,13 @@ function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ,
             println("Step size = ", _ℓ)
             println("x = ", _x)
             println("Objective = ", val)
+            println("n = ", n)
 
         else
             println("Bounds Overstep: Restarting Solver")
 
             _x = MinFromRandomDistribution(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _κ, maxIt)[1]
         end
-
 
         if static_count >= stat_thresh
             break
@@ -268,6 +279,7 @@ function Basin_Hopping(_f, _x, numPoints, _minX, _maxX, _α, _β, _η, _ϵ, _κ,
     return min_sol
 end
 
+global now = time()
 
 xPlot = []
 yPlot = []
@@ -282,13 +294,16 @@ finalSolY = []
 distNoiseX = []
 distNoiseY = []
 
+timings = []
+normDif = []
+
 flush(stdout)
 
 n = 2
-minX = -100
-maxX = 100
-rand_num_points = 1e3
-x0 = rand(Uniform(minX, maxX), n)
+minX = -10
+maxX = 10
+rand_num_points = 1e5
+x0 = minX*ones(n)#rand(Uniform(minX, maxX), n)
 ϵ = 1e-8
 η = 1e-4
 α = 0.5
@@ -299,14 +314,15 @@ x0 = rand(Uniform(minX, maxX), n)
 γ = 0.9
 ϕ = 0.0
 T = 1
-static_threshold = 1e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
+static_threshold = 5e2 #number of iterations that we allow the solution to stay the same. Used as a stopping condition
 target_acc_rate = 0.6
 maxIterations = 5e2
+testDim = false
 
 #f(x) = x[1]^2 + x[2]^2 + 7*sin(x[1] + x[2]) + 10*sin(5x[1])
 #f(x) = (x[2] - 0.129*x[1]^2 + 1.6*x[1] - 6)^2 + 6.07*cos(x[1]) + 10
 #f(x) = Rastrigin(x, n)
-f(x) = Ackley(x)
+#f(x) = Ackley(x, n)
 #f(x) = Bukin(x)
 #f(x) = Bukin_Modified(x)
 #f(x) = Holder_Table(x)
@@ -321,11 +337,19 @@ f(x) = Ackley(x)
 #f(x) = Himmelblau(x)
 #f(x) = Levi(x)
 #f(x) = Michalewicz(x, n)
+#f(x) = Drop_Wave(x)
+f(x) = Rosenbrock(x, n)
 
+name = "Rosenbrock"
 
+runtime = @elapsed minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
+target_acc_rate, maxIterations, static_threshold)
+push!(finalSolX, minSol[1][1])
+push!(finalSolY, minSol[1][2])
 
-minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
-                        target_acc_rate, maxIterations, static_threshold)
+println("\nFinal Solution: ", minSol)
+println("Runtime: ", runtime)
+
 # for i = 1:9
 #     x0 = 2*(rand(n) .- 0.5) * 10.0
 #     sol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T,
@@ -337,12 +361,9 @@ minSol = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, �
 #
 # end
 
-push!(finalSolX, minSol[1][1])
-push!(finalSolY, minSol[1][2])
 
-println("\nFinal Solution: ", minSol)
 
-if n == 2
+if false #n == 2
     plotf(x,y) = f([x, y])
     _x = minX:0.005*abs(maxX - minX):maxX
     _y = minX:0.005*abs(maxX - minX):maxX
@@ -350,12 +371,112 @@ if n == 2
     Y = repeat(_y, 1, length(_x))
     Z = map(plotf, X, Y)
     p1 = Plots.contour(_x,_y, plotf, fill = true, aspect_ratio=:equal)
-    plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
-    scatter!(searchX, searchY, markersize = 2.5, color = "blue", label = "Noise")
+    plt = plot(p1, xrange = (minX, maxX), yrange = (minX, maxX), title = "Global Minimization With Basin Hopping", legendfontsize = 4, dpi = 400)
+   # scatter!(searchX, searchY, markersize = 2.5, color = "blue", label = "Noise")
     # scatter!(xPlot, yPlot, markersize = 2, color = "red", label = "Gradient Iterations")
-    # scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
+    #scatter!(solPlotX, solPlotY, color = "green", markersize = 2, label = "Gradient Solutions")
+    plot!(solPlotX, solPlotY, color = "black", linewidth = 3, label = "Best Solutions")
     # scatter!(distNoiseX, distNoiseY, color = "purple", markersize = 2, label = "Distribution noise")
-    plot!(minsX, minsY, color = "grey", label = "Descent Direction")
-    scatter!(minsX, minsY, color = "green", label = "Iterative Best Solutions")
+   # plot!(minsX, minsY, color = "grey", label = "Descent Direction")
+    #scatter!(minsX, minsY, color = "green", label = "Iterative Best Solutions")
     scatter!(finalSolX, finalSolY, color = "white", label = "Final Solution")
+    savefig(plt, "plot.png");
 end
+
+
+
+
+function TestDim(fun)
+    if testDim      
+        dimBench = []
+        dim = []
+        for i in 2:25
+            global n = i
+            f(x) = fun(x, n)
+            global x0 = minX*ones(n)
+    
+            runtime = 0
+            for j in 1:3
+                runtime += @elapsed Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T, target_acc_rate, maxIterations, static_threshold)
+            end
+            
+            append!(dimBench, runtime/5)
+            append!(dim, n)
+        end
+
+        return dim, dimBench
+    end
+end
+
+function TestAcc(fun)
+    if testAcc
+        acc = []
+        dim = []
+
+        for i in 2:10
+            global n = i
+            f(x) = fun(x,n)
+            global x0 = (20*rand() - 10)*ones(n)
+
+            count = 0.0
+            for j in 1:20
+                solution = Basin_Hopping(f, x0, rand_num_points, minX, maxX, α, β, η, ϵ, κ, ℓ, ℓ_range, γ, ϕ, T, target_acc_rate, maxIterations, static_threshold)
+                if norm(solution[1]) < 1e-8
+                    count+=1
+                end
+            end
+            append!(dim, n)
+            append!(acc, count/20)
+        end
+        return dim, acc
+    end
+end
+
+
+
+df = DataFrame(x = solPlotX, y = solPlotY, diff = normDif, time = timings)
+filename = "csv/basinHopping-" * name * ".csv"
+CSV.write(filename, df)
+
+# name = "Rosenbrock"
+# dim, dimBench = TestDim(Rosenbrock)
+# df = DataFrame(x = dim, y = dimBench)
+# filename = "runtime-"*name*".csv"
+# CSV.write(filename, df)
+
+# name = "Rast"
+# dim, dimBench = TestDim(Rastrigin)
+# df = DataFrame(x = dim, y = dimBench)
+# filename = "runtime-"*name*".csv"
+# CSV.write(filename, df)
+
+# name = "Sty"
+# dim, dimBench = TestDim(Styblinski_Tang)
+# df = DataFrame(x = dim, y = dimBench)
+# filename = "runtime-"*name*".csv"
+# CSV.write(filename, df)
+
+testAcc = true
+
+
+# name = "Rastrigin"
+# dim, accBench = TestAcc(Rastrigin)
+# df = DataFrame(Dimension = dim, Accuracy = accBench)
+# filename = "csv/accuracy-"*name*".csv"
+# CSV.write(filename, df)
+
+
+name = "Ackley"
+dim, accBench = TestAcc(Ackley)
+df = DataFrame(Dimension = dim, Accuracy = accBench)
+filename = "csv/accuracy-"*name*".csv"
+CSV.write(filename, df)
+
+
+# name = "Griewank"
+# dim, accBench = TestAcc(Griewank)
+# df = DataFrame(Dimension = dim, Accuracy = accBench)
+# filename = "csv/accuracy-"*name*".csv"
+# CSV.write(filename, df)
+
+

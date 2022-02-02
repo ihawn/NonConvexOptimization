@@ -14,11 +14,14 @@ public class PyramidHandler : MonoBehaviour
         var V = Vector<float>.Build;
         var m = M.DenseOfArray(new[,] { { x[0,0],  x[0,1], x[0,2], 1.0f },
                                         { x[1,0],  x[1,1], x[1,2], 1.0f },
-                                        { x[2,0],  x[2,1], x[2,2], 1.0f } });
-        Vector<float>[] k = m.Kernel();
-        var nullspace = V.DenseOfArray(new[] { k[0][0], k[0][1], k[0][2], k[0][3] });
+                                        { x[2,0],  x[2,1], x[2,2], 1.0f },
+                                        { 1.0f, 1.0f, 1.0f, 1.0f} });
+        
+        var b = Vector<float>.Build.Dense(new float[] { 0f, 0f, 0f, 1f });
+        var z = m.Solve(b);
+        var c = V.DenseOfArray(new[] { z[0], z[1], z[2], z[3] });
 
-        return new Hyperplane(parID, direction, nullspace);
+        return new Hyperplane(parID, direction, c);
     }
 
     public Pyramid GeneratePyramid(Vector3 peak, float L, int id)

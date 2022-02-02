@@ -473,7 +473,7 @@ MonoBehaviour:
   L: 7
   bounds: 0.8
   closenessThreshold: 10
-  maxIterations: 150
+  maxIterations: 100
   pyramidCount: 0
   hyperplaneCount: 0
   lowerBound: -100000

@@ -40,6 +40,15 @@ public class GameManager : MonoBehaviour
         Pyramid pyr3 = ph.GeneratePyramid(new Vector3(bounds, 0, -bounds), L, 2);
         Pyramid pyr4 = ph.GeneratePyramid(new Vector3(bounds, 0, bounds), L, 3);
 
+        
+       /* for(int i = 1; i < 2; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                print(pyr1.hyperplanes[i].coeff[j]);
+            }
+        }*/
+
         pyramids = new List<Pyramid> { pyr1, pyr2, pyr3, pyr4 }; //List init
 
         //Draw the mesh
@@ -50,12 +59,12 @@ public class GameManager : MonoBehaviour
 
 
         //Combinations of pyramids intersecting
-        combos = ph.CombinePyramids(pyramids);
+      //  combos = ph.CombinePyramids(pyramids);
         intersections = new List<Vector3>();
-        for (int i = 0; i < combos.Count; i++)
+      /*  for (int i = 0; i < combos.Count; i++)
         {
             intersections.AddRange(ih.IntersectPyramids(combos[i][0], combos[i][1], combos[i][2])); //Combine the lists
-        }
+        }*/
 
         //Add hyperplanes to list
         for (int i = 0; i < pyramids.Count; i++)
@@ -65,7 +74,7 @@ public class GameManager : MonoBehaviour
                 hyperplanes.Add(pyramids[i].hyperplanes[j]);
 
                 intersections.AddRange(ih.IntersectNew(hyperplanes, pyramids, pyramids[i]));
-                intersections = intersections.Distinct().ToList();
+             //   intersections = intersections.Distinct().ToList();
                 ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
             }    
         }
@@ -90,6 +99,7 @@ public class GameManager : MonoBehaviour
             Pyramid pyr = ph.GeneratePyramid(new Vector3(s.x, fx, s.z), L, pyramids.Count); //Generate new pyramid
             mg.GeneratePyramidMesh(pyr); //Draw the pyramid mesh
 
+            print("x = " + s.x + ", " + s.z);
 
             if (s.y > lowerBound)
                 lowerBound = s.y;
@@ -99,6 +109,8 @@ public class GameManager : MonoBehaviour
 
             List<Hyperplane> closeHyps = GetAdjHyperplanes(pyramids, pyr, closenessThreshold);
             List<Vector3> newIntersections = ih.IntersectNew(/*hyperplanes*/closeHyps, pyramids, pyr);
+
+
 
 
             pyramids.Add(pyr); //Add new pyramid to list
