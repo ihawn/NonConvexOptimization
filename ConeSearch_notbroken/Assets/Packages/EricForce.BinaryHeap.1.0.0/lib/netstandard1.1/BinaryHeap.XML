@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BinaryHeap</name>
+    </assembly>
+    <members>
+        <member name="T:BinaryHeap.BinaryMinHeap`1">
+            <summary>
+            Implements the binary heap algorithm where the min value is always the root. A binary heap allows on average O(1) insertion while representing the tree as a single dimensional List.
+            </summary>
+            <typeparam name="T">The type of elements in the heap.</typeparam>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:BinaryHeap.BinaryMinHeap`1"/> class with an empty heap.
+            </summary>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Initializes a new instance of the <see cref="T:BinaryHeap.BinaryMinHeap`1"/> class that contains elements copied from the specified collection.
+            <para>The heap is built in worse case O(nlog(n)) time.</para>
+            </summary>
+            <param name="collection">The collection whose elements are copied to the new list.</param>
+            <exception cref="T:System.ArgumentNullException">collection is null.</exception>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.#ctor(System.Collections.Generic.ICollection{`0})">
+            <summary>
+            Initializes a new instance of the <see cref="T:BinaryHeap.BinaryMinHeap`1"/> class that contains elements copied from the specified collection.
+            <para>The heap is built in worse case O(n) time (Floyd).</para>
+            </summary>
+            <param name="collection">The collection whose elements are copied to the new list.</param>
+            <exception cref="T:System.ArgumentNullException">collection is null.</exception>
+        </member>
+        <member name="P:BinaryHeap.BinaryMinHeap`1.Count">
+            <summary>
+            Gets the number of elements contained in the <see cref="T:BinaryHeap.BinaryMinHeap`1"/>.
+            </summary>
+        </member>
+        <member name="P:BinaryHeap.BinaryMinHeap`1.Heap">
+            <summary>
+            Gets the inner <see cref="T:System.Collections.Generic.IList`1"/> for the heap. The binary tree is represented as a single dimensional array.
+            </summary>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.Insert(`0)">
+            <summary>
+            Inserts an item into the <see cref="T:BinaryHeap.BinaryMinHeap`1"/>.
+            </summary>
+            <param name="item">The object to add to the <see cref="T:BinaryHeap.BinaryMinHeap`1"/>.</param>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.Extract">
+            <summary>
+            Returns and removes the root or lowest value in the heap.
+            </summary>
+            <returns>The root or lowest value in the heap.</returns>
+            <exception cref="T:System.InvalidOperationException">The <see cref="T:BinaryHeap.BinaryMinHeap`1"/> is empty.</exception>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.Peek">
+            <summary>
+            Returns the object at the root of the <see cref="T:BinaryHeap.BinaryMinHeap`1"/> without removing it.
+            </summary>
+            <returns>The object at the root of the <see cref="T:BinaryHeap.BinaryMinHeap`1"/>.</returns>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.ToString">
+            <summary>
+            Returns a string that represents the current <see cref="T:BinaryHeap.BinaryMinHeap`1"/> instance.
+            </summary>
+            <returns>A string that represents the current <see cref="T:BinaryHeap.BinaryMinHeap`1"/> instance.</returns>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.UpHeap(System.Int32)">
+            <summary>
+            Iteratively swaps the current node and the child node if the parent node isn't the smallest between the two children.
+            </summary>
+            <param name="currentIndex">The starting node's index.</param>
+        </member>
+        <member name="M:BinaryHeap.BinaryMinHeap`1.DownHeap(System.Int32)">
+            <summary>
+            Iteratively swaps the current node and the largest child node if the current node isn't the smallest between its two children.
+            </summary>
+            <param name="currentIndex">The starting node's index.</param>
+        </member>
+        <member name="T:BinaryHeap.IBinaryHeap`1">
+            <summary>
+            Represents a binary heap algorithm. A binary heap allows on average O(1) insertion while representing the tree as a single dimensional List.
+            </summary>
+            <typeparam name="T">The type of elements in the heap.</typeparam>
+        </member>
+        <member name="P:BinaryHeap.IBinaryHeap`1.Count">
+            <summary>
+            Gets the number of elements contained in the <see cref="T:BinaryHeap.IBinaryHeap`1"/>.
+            </summary>
+        </member>
+        <member name="M:BinaryHeap.IBinaryHeap`1.Insert(`0)">
+            <summary>
+            Inserts an item into the <see cref="T:BinaryHeap.IBinaryHeap`1"/>.
+            </summary>
+            <param name="item">The object to add to the <see cref="T:BinaryHeap.IBinaryHeap`1"/>.</param>
+        </member>
+        <member name="M:BinaryHeap.IBinaryHeap`1.Extract">
+            <summary>
+            Returns and removes the root or the heap.
+            </summary>
+            <returns>The root in the heap.</returns>
+            <exception cref="T:System.InvalidOperationException">The <see cref="T:BinaryHeap.IBinaryHeap`1"/> is empty.</exception>
+        </member>
+        <member name="M:BinaryHeap.IBinaryHeap`1.Peek">
+            <summary>
+            Returns the object at the root of the <see cref="T:BinaryHeap.IBinaryHeap`1"/> without removing it.
+            </summary>
+            <returns>The object at the root of the <see cref="T:BinaryHeap.IBinaryHeap`1"/>.</returns>
+        </member>
+    </members>
+</doc>

@@ -17,7 +17,7 @@ function GraphObjectiveConvergence(f, xx, yy, size, finalSolX, finalSolY, filena
     plt = plot(p1, xrange = (-size, size), yrange = (-size, size), legendfontsize = 4, dpi = 400, title = name*" Function - "*method)
     plot!(xx, yy, color = "white", linewidth = 1, label = false)
     scatter!(xx, yy, color = "white", markersize = 2.5, label = "Best Solutions")
-    scatter!([xx[length(xx)-1]], [yy[length(yy)-1]], color = "red", markersize = 3, label = "Final Solution")
+    scatter!([xx[length(xx)]], [yy[length(yy)]], color = "red", markersize = 3, label = "Final Solution")
     savefig(plt, filename);
 end
 
@@ -39,18 +39,18 @@ function GetDataFromCSV(filename)
     return xx, yy
 end
 
-# mx = 8.006562530948429
-# my = 7.853981614754402
+mx = 8.006562530948429
+my = 7.853981614754402
 
-# hx = -2.805118
-# hy = 3.131312
+hx = -2.805118
+hy = 3.131312
 
-# f(x) = Rosenbrock(x, 2)
+f(x) = Rastrigin(x, 2)
 
-# name = "Rosenbrock"
-# method = "Basin Hopping"
-# xx, yy = GetDataFromCSV("csv/basinHopping-"*name*".csv")
-# GraphObjectiveConvergence(f, xx, yy, 10, 0, 0, "png/"*method*name*".png", method, name)
+name = "Rastrigin"
+method = "Basin Hopping"
+xx, yy = GetDataFromCSV("csv/basinHopping-"*name*".csv")
+GraphObjectiveConvergence(f, xx, yy, 10, 0, 0, "png/"*method*name*".png", method, name)
 
 
 # nn1, tt1 = GetDataFromCSV("csv/runtime-Ackley.csv")
@@ -86,56 +86,56 @@ end
 # plt = plot(xx, yy, xlabel = "L", ylabel = "Runtime (Seconds)", title = "Cone Search Runtime v. L", legend = false, dpi = 150, color = "Black")
 # savefig(plt, "png/VariableConesearchRuntimes.png")
 
-function GetTimeData1(data, sums)
-    sum = 0
-    for row in data
-        sum += row.time
-    end
-    append!(sums, sum)
-    return sums
-end
+# function GetTimeData1(data, sums)
+#     sum = 0
+#     for row in data
+#         sum += row.time
+#     end
+#     append!(sums, sum)
+#     return sums
+# end
 
-function GetTimeData2(data, sums)
-    sum = 0
-    for row in data
-        sum += row.step_time
-    end
-    append!(sums, sum)
-    return sums
-end
+# function GetTimeData2(data, sums)
+#     sum = 0
+#     for row in data
+#         sum += row.step_time
+#     end
+#     append!(sums, sum)
+#     return sums
+# end
 
-sums_b = []
-sums_c = []
+# sums_b = []
+# sums_c = []
 
-gData_b = CSV.File("csv/basinHopping-Griewank.csv")
-sums_b = GetTimeData1(gData_b, sums_b)
-gData_c = CSV.File("csv/ConeSearchGriewank.csv")
-sums_c = GetTimeData2(gData_c, sums_c)
+# gData_b = CSV.File("csv/basinHopping-Griewank.csv")
+# sums_b = GetTimeData1(gData_b, sums_b)
+# gData_c = CSV.File("csv/ConeSearchGriewank.csv")
+# sums_c = GetTimeData2(gData_c, sums_c)
 
-aData_b = CSV.File("csv/basinHopping-Ackley.csv")
-sums_b = GetTimeData1(aData_b, sums_b)
-aData_c = CSV.File("csv/ConeSearchAckley.csv")
-sums_c = GetTimeData2(aData_c, sums_c)
+# aData_b = CSV.File("csv/basinHopping-Ackley.csv")
+# sums_b = GetTimeData1(aData_b, sums_b)
+# aData_c = CSV.File("csv/ConeSearchAckley.csv")
+# sums_c = GetTimeData2(aData_c, sums_c)
 
-eData_b = CSV.File("csv/basinHopping-Easom.csv")
-sums_b = GetTimeData1(eData_b, sums_b)
-eData_c = CSV.File("csv/ConeSearchEasom.csv")
-sums_c = GetTimeData2(eData_c, sums_c)
+# eData_b = CSV.File("csv/basinHopping-Easom.csv")
+# sums_b = GetTimeData1(eData_b, sums_b)
+# eData_c = CSV.File("csv/ConeSearchEasom.csv")
+# sums_c = GetTimeData2(eData_c, sums_c)
 
-rData_b = CSV.File("csv/basinHopping-Rastrigin.csv")
-sums_b = GetTimeData1(rData_b, sums_b)
-rData_c = CSV.File("csv/ConeSearchRastrigin.csv")
-sums_c = GetTimeData2(rData_c, sums_c)
+# rData_b = CSV.File("csv/basinHopping-Rastrigin.csv")
+# sums_b = GetTimeData1(rData_b, sums_b)
+# rData_c = CSV.File("csv/ConeSearchRastrigin.csv")
+# sums_c = GetTimeData2(rData_c, sums_c)
 
-dData_b = CSV.File("csv/basinHopping-Drop_Wave.csv")
-sums_b = GetTimeData1(dData_b, sums_b)
-dData_c = CSV.File("csv/ConeSearchDropWave.csv")
-sums_c = GetTimeData2(dData_c, sums_c)
+# dData_b = CSV.File("csv/basinHopping-Drop_Wave.csv")
+# sums_b = GetTimeData1(dData_b, sums_b)
+# dData_c = CSV.File("csv/ConeSearchDropWave.csv")
+# sums_c = GetTimeData2(dData_c, sums_c)
 
-@show sums_c
-@show sums_b
+# @show sums_c
+# @show sums_b
 
-ticklabel = ["Griewank", "Ackley", "Easom", "Rastrigin", "Drop Wave"]
-plt = groupedbar([sums_c sums_b],legend=:outertop, xlabel = "Function", ylabel = "Time (Seconds)", bar_position=:stack, color = ["Black" "Gray"], yaxis=:log, ylims=(1e-3, 1250.0), xticks = (1:5, ticklabel), label = ["Cone Search" "Basin Hopping"], dpi = 150, title = "Runtime: Cone Search v. Basin Hopping")
+# ticklabel = ["Griewank", "Ackley", "Easom", "Rastrigin", "Drop Wave"]
+# plt = groupedbar([sums_c sums_b],legend=:outertop, xlabel = "Function", ylabel = "Time (Seconds)", color = ["Black" "Gray"], yaxis=:log, ylims=(1e-2, 1e3), xticks = (1:5, ticklabel), label = ["Cone Search" "Basin Hopping"], dpi = 150, title = "Runtime: Cone Search v. Basin Hopping")
 
-savefig(plt, "png/RuntimeBarComparision.png")
+# savefig(plt, "png/RuntimeBarComparision.png")

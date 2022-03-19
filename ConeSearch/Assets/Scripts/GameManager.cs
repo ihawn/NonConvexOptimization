@@ -78,7 +78,6 @@ public class GameManager : MonoBehaviour
                 ih.PruneIntersections(intersections, pyramids); //Remove intersection points that lie below any of the pyramids
             }    
         }
-        
 
 
         //Draw the intersections
